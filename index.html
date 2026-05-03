@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0606" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>SPIN THE WHEEL — 6 STJERNES MIDDAG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;600;700&family=Permanent+Marker&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="flame-bg"></div>
+  <div class="grain-overlay"></div>
+  <div class="smoke smoke-1"></div>
+  <div class="smoke smoke-2"></div>
+
+  <header class="hero">
+    <div class="hero-stars">★ ★ ★ ★ ★ ★</div>
+    <h1 class="title">
+      <span class="title-eyebrow">GORDON PRESENTS</span>
+      <span class="title-main">SPIN THE WHEEL</span>
+      <span class="title-sub">6 STJERNES MIDDAG</span>
+    </h1>
+    <p class="subtitle">"WHERE THE HELL IS DINNER COMING FROM TONIGHT?"</p>
+    <div class="chef-strip">
+      <span>🔪 NO RESERVATIONS</span>
+      <span>🔥 NO MERCY</span>
+      <span>👨‍🍳 YES CHEF</span>
+    </div>
+  </header>
+
+  <main class="wheel-container">
+    <div class="pointer-wrapper">
+      <div class="pointer">
+        <svg viewBox="0 0 60 80" width="60" height="80">
+          <polygon points="30,75 5,10 55,10" fill="#ffd700" stroke="#8b0000" stroke-width="3"/>
+          <polygon points="30,65 15,15 45,15" fill="#dc143c"/>
+          <circle cx="30" cy="20" r="5" fill="#fff"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="wheel-shell">
+      <div class="wheel-glow"></div>
+      <div class="wheel-ring"></div>
+      <svg class="wheel" id="wheel" viewBox="0 0 500 500"></svg>
+      <button class="spin-btn" id="spinBtn" aria-label="Spin the wheel">
+        <span class="spin-btn-inner">
+          <span class="spin-btn-icon">🔥</span>
+          <span class="spin-btn-text">SPIN</span>
+        </span>
+      </button>
+    </div>
+
+    <p class="wheel-caption">TRYKK KNAPPEN. TA SKJEBNEN. LAG MIDDAG.</p>
+  </main>
+
+  <section class="tag-bar">
+    <div class="tag-track">
+      <span>🍝 PASTA LA VISTA</span>
+      <span>🌶️ IT'S A SPICY MEATBALL</span>
+      <span>🥐 C'EST LA VIE</span>
+      <span>🍣 ITADAKIMASU OR DIE</span>
+      <span>🥘 ¡QUÉ BUENO!</span>
+      <span>🫓 INJERA MAGIC</span>
+      <span>🥩 ASADO O MUERTE</span>
+      <span>🍜 PHO REAL</span>
+      <span>🍝 PASTA LA VISTA</span>
+      <span>🌶️ IT'S A SPICY MEATBALL</span>
+      <span>🥐 C'EST LA VIE</span>
+      <span>🍣 ITADAKIMASU OR DIE</span>
+      <span>🥘 ¡QUÉ BUENO!</span>
+      <span>🫓 INJERA MAGIC</span>
+      <span>🥩 ASADO O MUERTE</span>
+      <span>🍜 PHO REAL</span>
+    </div>
+  </section>
+
+  <section class="rules">
+    <h2 class="rules-title">REGLER PÅ KJØKKENET</h2>
+    <div class="rules-grid">
+      <div class="rule-card">
+        <div class="rule-num">01</div>
+        <h3>INGEN UNNSKYLDNINGER</h3>
+        <p>Hjulet bestemmer. Du lager. Dette er ikke TripAdvisor.</p>
+      </div>
+      <div class="rule-card">
+        <div class="rule-num">02</div>
+        <h3>RESPEKTER NONNA</h3>
+        <p>Falt det på Italia? Ingen fløte i carbonara. Ingen ananas på pizzaen.</p>
+      </div>
+      <div class="rule-card">
+        <div class="rule-num">03</div>
+        <h3>SIX STARS OR NOTHING</h3>
+        <p>Michelin gir tre. Vi gir seks. Fordi vi kan.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal-backdrop" id="modal" aria-hidden="true">
+    <div class="modal" role="dialog">
+      <button class="modal-close" id="closeModal" aria-label="Lukk">✕</button>
+      <div class="modal-banner">★ CHEF'S CHOICE ★</div>
+      <div class="modal-flag" id="modalFlag"></div>
+      <h2 class="modal-country" id="modalCountry"></h2>
+      <div class="modal-tagline" id="modalTagline"></div>
+      <div class="modal-body">
+        <div class="modal-section">
+          <h3>🍴 SIGNATURRETTER</h3>
+          <p id="modalDishes"></p>
+        </div>
+        <div class="modal-section">
+          <h3>💡 INSIDER-INFO</h3>
+          <p id="modalInfo"></p>
+        </div>
+        <div class="modal-section meme">
+          <h3>😈 CHEF RAMSAY SIER</h3>
+          <p id="modalMeme"></p>
+        </div>
+      </div>
+      <button class="modal-again" id="spinAgain">SPIN IGJEN, DONKEY!</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>GORDON IS NOT PROUD. BUT YOU ARE HUNGRY.</p>
+    <p class="footer-small">★ UNOFFICIAL. UNSERIOUS. UNDERCOOKED. ★</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -19,15 +19,34 @@ Italia · Spania · Tyrkia · Frankrike · India · Japan · USA · Vietnam · A
 
 ## Kjør lokalt
 
+Med Node:
+```bash
+npm start
+```
+
+Eller bare med Python:
 ```bash
 python -m http.server 8000
 ```
 
-Åpne deretter http://localhost:8000
+Åpne http://localhost:3000 (Node) eller http://localhost:8000 (Python).
+
+## Deploy til Railway
+
+Repoet er klart for Railway. Push til GitHub, koble Railway til repoet, og deploy:
+
+1. **railway.json** sier til Railway å bruke Nixpacks og kjøre `npm start`.
+2. **server.js** er en bitteliten Node http-server (null avhengigheter) som lytter på `process.env.PORT`.
+3. Railway gir automatisk en HTTPS-URL.
+
+```bash
+# Lokalt — verifiser at det starter:
+PORT=3000 npm start
+```
 
 ## Stack
 
-Ren HTML, CSS og vanilla JS. Ingen build-steg, ingen avhengigheter.
+Ren HTML, CSS og vanilla JS i frontend. Node http stdlib til server. Ingen build-steg, ingen runtime-avhengigheter utover Node.
 
 ## Inspirert av
 

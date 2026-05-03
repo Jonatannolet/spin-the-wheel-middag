@@ -155,7 +155,7 @@ function buildWheel() {
     path.setAttribute('stroke', '#ffd700');
     path.setAttribute('stroke-width', '2');
     path.classList.add('segment');
-    path.addEventListener('click', () => { if (!isSpinning) spinToIndex(i); });
+    path.addEventListener('click', () => { if (!isSpinning) spin(); });
     wheelSvg.appendChild(path);
 
     const mid = start + SEG / 2;

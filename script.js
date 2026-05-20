@@ -45,15 +45,6 @@ const countries = [
     meme: "Gordon Ramsay: 'It's a BIT spicy!' Indisk bestemor: *smaker* *legger til tre mer chilier* 'Dette er bhut-jolokia-nivå, beta. For babyer. Skulle du prøve ghost pepper?' *gordon svetter på tv*"
   },
   {
-    name: "JAPAN",
-    flag: "🇯🇵",
-    color: "#bc002d",
-    tagline: "ITADAKIMASU OR DIE",
-    dishes: "Sushi (nigiri, ikke California roll), ramen (tonkotsu, shoyu, miso, shio), tempura, tonkatsu, okonomiyaki, takoyaki, wagyu A5 (så mørt at det smelter før det når tennene dine), matcha-alt.",
-    info: "Å blande wasabi i soya hos en ordentlig sushi-mester er fornærmende — mesteren har allerede krydret hver bit perfekt. Høy slurping av ramen = kompliment. Tipping er aggressivt uhøflig. Tokyo har flere Michelin-stjerner enn Paris.",
-    meme: "Deg: 'One California roll please, extra cream cheese?' Sushi-mester i Ginza, 40 år i bransjen: *legger fra seg kniven sakte* *ser ut vinduet* *tenker på sin mor* 'Kudasai... forlat restauranten.'"
-  },
-  {
     name: "USA",
     flag: "🇺🇸",
     color: "#b22234",

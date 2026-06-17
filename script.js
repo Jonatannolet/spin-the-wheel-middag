@@ -18,15 +18,6 @@ const countries = [
     meme: "Jamie Oliver la chorizo i paellaen sin i 2016. Spania erklærte ham en nasjonal fiende. 8 år senere er han fortsatt ikke tilgitt. Valencia har bokstavelig talt et DNA-register for ekte paella."
   },
   {
-    name: "TYRKIA",
-    flag: "🇹🇷",
-    color: "#e30a17",
-    tagline: "KEBAB SO GOOD IT'LL SLAP YOU",
-    dishes: "Döner kebab (oppfunnet i Berlin, men ideen er tyrkisk — ikke start krigen), iskender, meze-plater, baklava, künefe (smelta ost + søtt brød = himmel), lahmacun, og Turkish delight.",
-    info: "Tyrkisk te drikkes i små tulipanglass — 3-10 kopper om dagen er helt normalt. En tyrkisk frokost (kahvaltı) er 15 små tallerkener og tar 2 timer. Grand Bazaar i Istanbul har 4000 butikker. Ja, fire tusen.",
-    meme: "Tyrkisk iskrem-selger: *gir deg isen* *tar den tilbake* *snurrer den rundt hodet ditt* *gir den til en annen turist* *gir deg tom kjegle* *du ler nervøst* *han ler ikke* *du betaler uansett*"
-  },
-  {
     name: "FRANKRIKE",
     flag: "🇫🇷",
     color: "#0055a4",

@@ -18,6 +18,10 @@
   <div class="grain-overlay"></div>
   <div class="smoke smoke-1"></div>
   <div class="smoke smoke-2"></div>
+  <div class="vignette" id="vignette"></div>
+
+  <button class="sound-toggle" id="soundToggle" aria-label="Skru av lyd">🔊</button>
+  <div class="toast-host" id="toastHost" aria-live="polite"></div>
 
   <header class="hero">
     <div class="hero-stars">★ ★ ★ ★ ★ ★</div>
@@ -31,6 +35,8 @@
       <span>🔪 NO RESERVATIONS</span>
       <span>🔥 NO MERCY</span>
       <span>👨‍🍳 YES CHEF</span>
+      <span>🍳 RAW? NEVER</span>
+      <span>⭐ SIX STARS</span>
     </div>
   </header>
 
@@ -55,10 +61,30 @@
           <span class="spin-btn-text">SPIN</span>
         </span>
       </button>
+
+      <div class="drumroll" id="drumroll" aria-hidden="true">
+        <div class="drumroll-inner">
+          <span class="drumroll-chef">👨‍🍳</span>
+          <span class="drumroll-text">CHEF BESTEMMER SEG…</span>
+          <span class="drumroll-dots"><i></i><i></i><i></i></span>
+        </div>
+      </div>
     </div>
 
     <p class="wheel-caption">TRYKK KNAPPEN. TA SKJEBNEN. LAG MIDDAG.</p>
   </main>
+
+  <section class="passport" id="passport">
+    <h2 class="passport-title">🛂 DITT MAT-PASS</h2>
+    <div class="passport-stats">
+      <div class="pstat"><span class="pstat-num" id="statTotal">0</span><span class="pstat-label">SPINN TOTALT</span></div>
+      <div class="pstat"><span class="pstat-num" id="statDistinct">0/9</span><span class="pstat-label">LAND BESØKT</span></div>
+      <div class="pstat"><span class="pstat-num" id="statStreak">—</span><span class="pstat-label">STREAK</span></div>
+    </div>
+    <div class="stamps" id="stamps"></div>
+    <h3 class="menu-title">📋 MENYEN DIN</h3>
+    <ul class="menu-list" id="menuList"></ul>
+  </section>
 
   <section class="tag-bar">
     <div class="tag-track">
@@ -69,6 +95,9 @@
       <span>🫓 INJERA MAGIC</span>
       <span>🥩 ASADO O MUERTE</span>
       <span>🍜 PHO REAL</span>
+      <span>🍛 CURRY ON COOKING</span>
+      <span>🍔 BURGER OF PROOF</span>
+      <span>🍷 WINE NOT?</span>
       <span>🍝 PASTA LA VISTA</span>
       <span>🌶️ IT'S A SPICY MEATBALL</span>
       <span>🥐 C'EST LA VIE</span>
@@ -76,6 +105,9 @@
       <span>🫓 INJERA MAGIC</span>
       <span>🥩 ASADO O MUERTE</span>
       <span>🍜 PHO REAL</span>
+      <span>🍛 CURRY ON COOKING</span>
+      <span>🍔 BURGER OF PROOF</span>
+      <span>🍷 WINE NOT?</span>
     </div>
   </section>
 
@@ -104,9 +136,35 @@
     <div class="modal" role="dialog">
       <button class="modal-close" id="closeModal" aria-label="Lukk">✕</button>
       <div class="modal-banner">★ CHEF'S CHOICE ★</div>
+      <div class="wildcard-banner" id="wildcardBanner">🌟 JACKPOT — HELE VERDEN ER PÅ MENYEN 🌟</div>
       <div class="modal-flag" id="modalFlag"></div>
       <h2 class="modal-country" id="modalCountry"></h2>
       <div class="modal-tagline" id="modalTagline"></div>
+      <div class="wild-origin" id="wildOrigin"></div>
+
+      <div class="dish-slot" id="dishSlot">
+        <div class="dish-slot-label">👨‍🍳 DU LAGER I KVELD</div>
+        <div class="dish-slot-window">
+          <span class="slot-emoji" id="slotEmoji">🍽️</span>
+          <span class="slot-name" id="slotName">…</span>
+        </div>
+      </div>
+
+      <div class="meters">
+        <div class="meter">
+          <span class="meter-label">STYRKE</span>
+          <span class="meter-pips" id="spiceMeter"></span>
+        </div>
+        <div class="meter">
+          <span class="meter-label">VANSKELIG</span>
+          <span class="meter-pips" id="diffMeter"></span>
+        </div>
+        <div class="meter drink">
+          <span class="meter-label">DRIKKE</span>
+          <span class="meter-drink" id="drinkPair"></span>
+        </div>
+      </div>
+
       <div class="modal-body">
         <div class="modal-section">
           <h3>🍴 SIGNATURRETTER</h3>
@@ -121,7 +179,11 @@
           <p id="modalMeme"></p>
         </div>
       </div>
-      <button class="modal-again" id="spinAgain">SPIN IGJEN, DONKEY!</button>
+
+      <div class="modal-actions">
+        <button class="modal-again" id="spinAgain">SPIN IGJEN, DONKEY!</button>
+        <button class="modal-share" id="shareBtn">📤 DEL MIDDAGEN</button>
+      </div>
     </div>
   </div>
 

@@ -539,7 +539,7 @@ function revealCountry(country) {
   showToast(randomQuip());
 }
 
-const REACTION_GIFS = ['gifs/idiot-sandwich.gif', 'gifs/delicious-steak.gif', 'gifs/lets-do-this.gif'];
+const REACTION_GIFS = ['gifs/idiot-sandwich.gif', 'gifs/delicious-steak.gif', 'gifs/lets-do-this.gif', 'gifs/dog-shit.gif'];
 
 function openResultModal(country) {
   const flagEl = document.getElementById('modalFlag');
@@ -797,3 +797,27 @@ document.addEventListener('keydown', (e) => {
 buildWheel();
 updateSoundUI();
 buildFoodChaos();
+
+/* ---------- Intro loader ---------- */
+(function introLoader() {
+  const intro = document.getElementById('intro');
+  if (!intro) return;
+  let done = false;
+  const start = performance.now();
+  const MIN_MS = 2200;   // make sure the GTA intro is actually seen
+  function hideIntro() {
+    if (done) return;
+    done = true;
+    intro.classList.add('hide');
+    setTimeout(() => intro.remove(), 700);
+  }
+  // Skip on tap (and prime audio with the gesture)
+  intro.addEventListener('click', () => { initAudio(); resumeAudio(); hideIntro(); });
+  // Hide after load, respecting a minimum on-screen time
+  window.addEventListener('load', () => {
+    const wait = Math.max(0, MIN_MS - (performance.now() - start));
+    setTimeout(hideIntro, wait);
+  });
+  // Hard fallback so it never gets stuck
+  setTimeout(hideIntro, 6000);
+})();

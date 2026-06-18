@@ -11,13 +11,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;600;700&family=Permanent+Marker&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=3" />
 </head>
 <body>
   <div class="flame-bg"></div>
   <div class="grain-overlay"></div>
   <div class="smoke smoke-1"></div>
   <div class="smoke smoke-2"></div>
+  <div class="food-chaos" id="foodChaos" aria-hidden="true"></div>
   <div class="vignette" id="vignette"></div>
 
   <button class="sound-toggle" id="soundToggle" aria-label="Skru av lyd">🔊</button>
@@ -37,6 +38,9 @@
       <span>👨‍🍳 YES CHEF</span>
       <span>🍳 RAW? NEVER</span>
       <span>⭐ SIX STARS</span>
+      <span>🍝 MORE GARLIC</span>
+      <span>🧄 WHERE'S THE LAMB SAUCE</span>
+      <span>💥 PURE CHAOS</span>
     </div>
   </header>
 
@@ -74,18 +78,6 @@
     <p class="wheel-caption">TRYKK KNAPPEN. TA SKJEBNEN. LAG MIDDAG.</p>
   </main>
 
-  <section class="passport" id="passport">
-    <h2 class="passport-title">🛂 DITT MAT-PASS</h2>
-    <div class="passport-stats">
-      <div class="pstat"><span class="pstat-num" id="statTotal">0</span><span class="pstat-label">SPINN TOTALT</span></div>
-      <div class="pstat"><span class="pstat-num" id="statDistinct">0/9</span><span class="pstat-label">LAND BESØKT</span></div>
-      <div class="pstat"><span class="pstat-num" id="statStreak">—</span><span class="pstat-label">STREAK</span></div>
-    </div>
-    <div class="stamps" id="stamps"></div>
-    <h3 class="menu-title">📋 MENYEN DIN</h3>
-    <ul class="menu-list" id="menuList"></ul>
-  </section>
-
   <section class="tag-bar">
     <div class="tag-track">
       <span>🍝 PASTA LA VISTA</span>
@@ -98,6 +90,10 @@
       <span>🍛 CURRY ON COOKING</span>
       <span>🍔 BURGER OF PROOF</span>
       <span>🍷 WINE NOT?</span>
+      <span>🧆 FALAFEL FOREVER</span>
+      <span>🥟 DUMPLING DYNASTY</span>
+      <span>🍲 TAGINE TIME</span>
+      <span>🔥 IT'S RAW!!</span>
       <span>🍝 PASTA LA VISTA</span>
       <span>🌶️ IT'S A SPICY MEATBALL</span>
       <span>🥐 C'EST LA VIE</span>
@@ -108,6 +104,10 @@
       <span>🍛 CURRY ON COOKING</span>
       <span>🍔 BURGER OF PROOF</span>
       <span>🍷 WINE NOT?</span>
+      <span>🧆 FALAFEL FOREVER</span>
+      <span>🥟 DUMPLING DYNASTY</span>
+      <span>🍲 TAGINE TIME</span>
+      <span>🔥 IT'S RAW!!</span>
     </div>
   </section>
 
@@ -182,6 +182,6 @@
     <p class="footer-small">★ UNOFFICIAL. UNSERIOUS. UNDERCOOKED. ★</p>
   </footer>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=3"></script>
 </body>
 </html>

@@ -531,11 +531,12 @@ function revealCountry(country) {
   lastResult = { country };
   openResultModal(country);
   launchRain(country.foodEmojis);
+  foodExplosion(country.foodEmojis);
   shakeScreen();
   flameBurst();
   playWin();
   buzz([0, 40, 60, 120]);
-  recordSpin(country);
+  showToast(randomQuip());
 }
 
 function openResultModal(country) {
@@ -583,19 +584,30 @@ function hideModal() {
 }
 
 /* ============================================================
-   FX — rain, shake, flames
+   FX — rain, shake, flames, FOOD CHAOS
    ============================================================ */
+// Big global food pool — "mer mat, mer av alt"
+const FOOD_POOL = [
+  '🍕','🍝','🍔','🌮','🌯','🥘','🍜','🍣','🍤','🥟','🧆','🫓','🥖','🥐','🥩','🍗','🍖',
+  '🌭','🧀','🥗','🍲','🥣','🍛','🍚','🍱','🍙','🥑','🍅','🌶️','🧄','🧅','🥦','🌽','🥕',
+  '🍷','🍺','🍹','☕','🧉','🍮','🍰','🧁','🍩','🍪','🥧','🍫','🍯','🥥','🍋','🍆','🦐','🐟'
+];
+function pickFood(extra) {
+  const pool = extra && extra.length && Math.random() > 0.45 ? extra : FOOD_POOL;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function launchRain(emojis) {
   const colors = ['#dc143c', '#ffd700', '#ff5722', '#ffffff', '#ff9800', '#ff1744'];
   const isMobile = window.innerWidth < 600;
-  const total = (reduceMotion ? 14 : (isMobile ? 46 : 90));
+  const total = (reduceMotion ? 18 : (isMobile ? 70 : 150));
   for (let i = 0; i < total; i++) {
     const c = document.createElement('div');
-    const useEmoji = emojis && emojis.length && Math.random() > 0.42;
+    const useEmoji = Math.random() > 0.3;
     if (useEmoji) {
       c.className = 'confetti emoji-bit';
-      c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-      c.style.fontSize = (18 + Math.random() * 22) + 'px';
+      c.textContent = pickFood(emojis);
+      c.style.fontSize = (18 + Math.random() * 26) + 'px';
     } else {
       c.className = 'confetti';
       c.style.background = colors[Math.floor(Math.random() * colors.length)];
@@ -643,85 +655,69 @@ function flameBurst() {
   }
 }
 
-/* ============================================================
-   HISTORY / PASSPORT (localStorage)
-   ============================================================ */
-const HKEY = 'stw-history';
-function loadHistory() {
-  try {
-    const raw = localStorage.getItem(HKEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return { total: 0, streakName: null, streakCount: 0, visited: {}, menu: [], achievements: [] };
-}
-function saveHistory(h) {
-  try { localStorage.setItem(HKEY, JSON.stringify(h)); } catch (e) {}
-}
-let history = loadHistory();
-
-function recordSpin(country) {
-  history.total += 1;
-  history.visited[country.name] = (history.visited[country.name] || 0) + 1;
-  if (history.streakName === country.name) history.streakCount += 1;
-  else { history.streakName = country.name; history.streakCount = 1; }
-  history.menu.unshift({ code: FLAG_CODES[country.name], country: country.name, tagline: country.tagline });
-  history.menu = history.menu.slice(0, 8);
-  saveHistory(history);
-  renderPassport();
-  checkAchievements(country);
-}
-
-function renderPassport() {
-  const totalEl = document.getElementById('statTotal');
-  const streakEl = document.getElementById('statStreak');
-  const distinctEl = document.getElementById('statDistinct');
-  if (totalEl) totalEl.textContent = history.total;
-  if (streakEl) streakEl.textContent = history.streakCount > 1 ? `${history.streakCount}× ${history.streakName}` : '—';
-  const distinct = Object.keys(history.visited).length;
-  if (distinctEl) distinctEl.textContent = `${distinct}/${countries.length}`;
-
-  const stamps = document.getElementById('stamps');
-  if (stamps) {
-    stamps.innerHTML = countries.map(c => {
-      const n = history.visited[c.name] || 0;
-      return `<div class="stamp ${n ? 'on' : ''}" title="${c.name}: ${n}">
-        <img class="stamp-flag" src="${flagSrc(c)}" alt="${c.name}-flagg">
-        ${n ? `<span class="stamp-count">${n}</span>` : ''}
-      </div>`;
-    }).join('');
+// Food blasts out from the centre of the wheel — pure chaos
+function foodExplosion(extra) {
+  if (reduceMotion || !wheelShell) return;
+  const rect = wheelShell.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const count = window.innerWidth < 600 ? 22 : 40;
+  for (let i = 0; i < count; i++) {
+    const f = document.createElement('div');
+    f.className = 'flame-burst';
+    f.textContent = pickFood(extra);
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 140 + Math.random() * 280;
+    f.style.left = cx + 'px';
+    f.style.top = cy + 'px';
+    f.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    f.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    f.style.fontSize = (22 + Math.random() * 30) + 'px';
+    f.style.animationDuration = (0.9 + Math.random() * 0.6) + 's';
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 1600);
   }
+}
 
-  const menuEl = document.getElementById('menuList');
-  if (menuEl) {
-    if (!history.menu.length) {
-      menuEl.innerHTML = '<li class="menu-empty">Ingen land enda. Snurr hjulet!</li>';
-    } else {
-      menuEl.innerHTML = history.menu.map(m =>
-        `<li><img class="menu-flag" src="flags/${m.code}.svg" alt=""> <strong>${m.country}</strong> <span>· ${m.tagline}</span></li>`
-      ).join('');
-    }
+// Ambient floating food in the background — always-on chaos
+function buildFoodChaos() {
+  const host = document.getElementById('foodChaos');
+  if (!host || reduceMotion) return;
+  const count = window.innerWidth < 600 ? 14 : 26;
+  for (let i = 0; i < count; i++) {
+    const e = document.createElement('span');
+    e.className = 'food-float';
+    e.textContent = FOOD_POOL[Math.floor(Math.random() * FOOD_POOL.length)];
+    e.style.left = Math.random() * 100 + 'vw';
+    e.style.top = Math.random() * 100 + 'vh';
+    e.style.fontSize = (24 + Math.random() * 44) + 'px';
+    e.style.setProperty('--dur', (12 + Math.random() * 16) + 's');
+    e.style.setProperty('--drift', (Math.random() * 120 - 60) + 'px');
+    e.style.setProperty('--rot', (Math.random() * 80 - 40) + 'deg');
+    e.style.animationDelay = `-${Math.random() * 20}s`;
+    host.appendChild(e);
   }
 }
 
 /* ============================================================
-   ACHIEVEMENTS
+   GORDON QUIPS — random chaos voice on every spin
    ============================================================ */
-const ACHIEVEMENTS = [
-  { id: 'first',    test: () => history.total >= 1,                       text: '🎉 Første spinn! Velkommen til kjøkkenet.' },
-  { id: 'five',     test: () => Object.keys(history.visited).length >= 5, text: '🌍 5 land besøkt — du er en globetrotter!' },
-  { id: 'all',      test: () => Object.keys(history.visited).length >= countries.length, text: '👑 ALLE land besøkt! Gordon nikker (knapt).' },
-  { id: 'streak3',  test: () => history.streakCount >= 3,                 text: '🔁 Triple på rad! Skjebnen elsker deg.' },
-  { id: 'ten',      test: () => history.total >= 10,                      text: '🔥 10 spinn! Kjøkkenet er ditt nå.' }
+const GORDON_QUIPS = [
+  '😤 FINALLY some good food!',
+  '🔥 IT\'S RAW! ...nei da, perfekt. Lag det.',
+  '👨‍🍳 Move it, move it, MOVE IT!',
+  '🍝 My grandmother could cook this faster!',
+  '💢 Where is the LAMB SAUCE?!',
+  '😋 Beautiful. Stunning. Now GO.',
+  '🥄 An idiot sandwich? Nei — en 6-stjerners middag!',
+  '🌶️ Spice it up, you donut!',
+  '🔪 Tonight, you cook like you mean it.',
+  '😱 You call that a kjøkken?! Prove me wrong!',
+  '🍷 Pour the wine, light the fire, LET\'S GO!',
+  '💥 CHAOS in the kitchen — akkurat som jeg liker det!'
 ];
-function checkAchievements(country) {
-  ACHIEVEMENTS.forEach(a => {
-    if (history.achievements.includes(a.id)) return;
-    if (a.test(country)) {
-      history.achievements.push(a.id);
-      saveHistory(history);
-      showToast(a.text);
-    }
-  });
+function randomQuip() {
+  return GORDON_QUIPS[Math.floor(Math.random() * GORDON_QUIPS.length)];
 }
 
 /* ---------- Toasts ---------- */
@@ -796,4 +792,4 @@ document.addEventListener('keydown', (e) => {
 
 buildWheel();
 updateSoundUI();
-renderPassport();
+buildFoodChaos();

@@ -45,9 +45,12 @@ const server = http.createServer((req, res) => {
       }
       const ext = path.extname(filePath).toLowerCase();
       const type = MIME[ext] || 'application/octet-stream';
-      const cacheControl = ext === '.html'
+      // HTML/CSS/JS must revalidate so deploys land immediately.
+      // Images/flags/fonts can cache for a day.
+      const revalidate = ext === '.html' || ext === '.css' || ext === '.js';
+      const cacheControl = revalidate
         ? 'no-cache'
-        : 'public, max-age=3600';
+        : 'public, max-age=86400';
       res.writeHead(200, {
         'Content-Type': type,
         'Cache-Control': cacheControl,

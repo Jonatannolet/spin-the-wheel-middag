@@ -565,7 +565,6 @@ let savedScrollY = 0;
 
 function revealCountry(country) {
   lastResult = { country };
-  recordSpin(country);
   openResultModal(country);
   launchRain(country.foodEmojis);
   foodExplosion(country.foodEmojis);
@@ -870,56 +869,6 @@ async function shareResult() {
 }
 
 /* ============================================================
-   STATS — kokke-rank + spinn-teller (localStorage)
-   ============================================================ */
-const RANKS = [
-  { min: 0,  name: 'COMMIS' },
-  { min: 3,  name: 'CHEF DE PARTIE' },
-  { min: 6,  name: 'SOUS CHEF' },
-  { min: 10, name: 'HEAD CHEF' },
-  { min: 16, name: 'MICHELIN' },
-  { min: 25, name: 'GORDON' }
-];
-function rankFor(spins) {
-  let name = RANKS[0].name;
-  for (const r of RANKS) if (spins >= r.min) name = r.name;
-  return name;
-}
-function loadStats() {
-  try {
-    const s = JSON.parse(localStorage.getItem('stw-stats') || '{}');
-    return { spins: s.spins || 0, countries: s.countries || {} };
-  } catch (e) { return { spins: 0, countries: {} }; }
-}
-function saveStats() {
-  try { localStorage.setItem('stw-stats', JSON.stringify(stats)); } catch (e) {}
-}
-let stats = loadStats();
-
-function renderStatBadge() {
-  const rankEl = document.getElementById('statRank');
-  const spinsEl = document.getElementById('statSpins');
-  if (rankEl) rankEl.textContent = rankFor(stats.spins);
-  if (spinsEl) spinsEl.textContent = stats.spins + ' SPINN';
-}
-function recordSpin(country) {
-  const before = rankFor(stats.spins);
-  stats.spins += 1;
-  if (country) stats.countries[country.name] = (stats.countries[country.name] || 0) + 1;
-  saveStats();
-  renderStatBadge();
-  const after = rankFor(stats.spins);
-  const badge = document.getElementById('statBadge');
-  if (badge && !reduceMotion) {
-    badge.classList.remove('bump'); void badge.offsetWidth; badge.classList.add('bump');
-  }
-  if (after !== before) {
-    if (badge) { badge.classList.add('rankup'); setTimeout(() => badge.classList.remove('rankup'), 950); }
-    setTimeout(() => showToast('👨‍🍳 FORFREMMET TIL ' + after + '!'), 700);
-  }
-}
-
-/* ============================================================
    DISH SLOT MACHINE — picks a signature dish in the modal
    ============================================================ */
 let dishSlotTimer = null;
@@ -1147,25 +1096,11 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Stat badge: tap to reveal your most-served country
-const statBadgeEl = document.getElementById('statBadge');
-if (statBadgeEl) {
-  statBadgeEl.addEventListener('click', () => {
-    playClick();
-    const entries = Object.entries(stats.countries);
-    if (!entries.length) { showToast('🍽️ Ingen middager ennå — SPIN!'); return; }
-    entries.sort((a, b) => b[1] - a[1]);
-    const [name, n] = entries[0];
-    showToast(`🏆 Mest servert: ${name} ×${n}`);
-  });
-}
-
 // Food trail follows pointer + touch
 window.addEventListener('pointermove', (e) => spawnTrail(e.clientX, e.clientY), { passive: true });
 
 buildWheel();
 updateSoundUI();
-renderStatBadge();
 buildFoodChaos();
 startGifChaos();
 

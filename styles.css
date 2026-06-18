@@ -1067,43 +1067,8 @@ body.is-spinning .food-float { animation-duration: 4s; opacity: 0.36; }
 }
 
 /* ============================================================
-   NEW CHAOS · stat-badge, dish slot, jackpot, flash, trail, ULTRA
+   NEW CHAOS · dish slot, jackpot, flash, trail, ULTRA
    ============================================================ */
-
-/* ---------- Stat badge (kokke-rank + spinn-teller) ---------- */
-.stat-badge {
-  position: fixed;
-  top: calc(16px + env(safe-area-inset-top));
-  left: calc(16px + env(safe-area-inset-left));
-  z-index: 60;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
-  padding: 8px 14px;
-  border-radius: 14px;
-  border: 2px solid var(--gold);
-  background: rgba(10,6,6,0.8);
-  backdrop-filter: blur(6px);
-  cursor: pointer;
-  font-family: 'Bebas Neue', sans-serif;
-  text-align: left;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.25);
-  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
-}
-.stat-badge:active { transform: scale(0.92); }
-@media (hover: hover) {
-  .stat-badge:hover { transform: scale(1.06) rotate(-2deg); box-shadow: 0 8px 30px rgba(255,215,0,0.55); }
-}
-.stat-rank { color: var(--gold); font-size: 18px; letter-spacing: 2px; line-height: 1; text-shadow: 0 0 12px rgba(255,215,0,0.5); }
-.stat-spins { color: var(--cream); font-size: 12px; letter-spacing: 2px; opacity: 0.8; }
-.stat-badge.bump { animation: stat-bump 0.5s cubic-bezier(0.175,0.885,0.32,1.4); }
-@keyframes stat-bump { 0% { transform: scale(1); } 40% { transform: scale(1.28) rotate(-5deg); } 100% { transform: scale(1); } }
-.stat-badge.rankup { animation: stat-rankup 0.9s ease; }
-@keyframes stat-rankup {
-  0%,100% { box-shadow: 0 6px 20px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.25); transform: scale(1); }
-  35%     { box-shadow: 0 0 55px rgba(255,215,0,1), 0 0 100px rgba(255,87,34,0.85); transform: scale(1.32) rotate(-4deg); }
-}
 
 /* ---------- Dish slot machine (modal) ---------- */
 .dish-slot {
@@ -1374,7 +1339,7 @@ body.ultra-chaos .spin-btn { animation-duration: 0.6s; }
   .dish-reel.spinning .dish-reel-item,
   .dish-reel.landed,
   .boom-flash, .jackpot, .jackpot-text, .trail-bit,
-  .stat-badge, .ultra-tint, .spin-btn-inner { animation: none !important; }
+  .ultra-tint, .spin-btn-inner { animation: none !important; }
   body.ultra-chaos .ultra-tint { opacity: 0; }
   * { transition-duration: 0.1s !important; }
 }

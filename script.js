@@ -706,52 +706,56 @@ function foodExplosion(extra) {
   }
 }
 
-// Scroll pop-ups: GIFs that suddenly peek in from the edges as you scroll.
-function buildScrollPops() {
+// GIF CHAOS — big reaction GIFs that fly in from random edges, hold a beat,
+// then retreat. Autonomous loop, capped concurrency, no two pops alike.
+function startGifChaos() {
   const layer = document.getElementById('popLayer');
   if (!layer || reduceMotion) return;
-  const list = [...ALL_GIFS].sort(() => Math.random() - 0.5);
-  const n = list.length;
-  list.forEach((g, i) => {
-    const side = i % 2 === 0 ? 'left' : 'right';
-    const top = 9 + (i / n) * 80;            // spread 9%..89% down the page
-    const peek = document.createElement('div');
-    peek.className = `peeker ${side}`;
-    peek.style.top = top + '%';
-    peek.style.setProperty('--tilt', (Math.random() * 10 - 5).toFixed(1) + 'deg');
-    peek.innerHTML =
-      `<div class="peeker-inner"><img src="${g.src}" loading="lazy" alt=""><span class="peek-cap">${g.cap}</span></div>`;
-    layer.appendChild(peek);
-  });
-  // Layer must span full document height so the top:% positions resolve.
-  const sizeLayer = () => {
-    layer.style.height = Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight
-    ) + 'px';
-  };
+  const EDGES = ['left', 'left', 'right', 'right', 'top', 'bottom'];
+  let active = 0;
 
-  // Reveal via scroll position (works regardless of tab visibility — IO can be
-  // throttled when the document is hidden).
-  const peekers = [...layer.querySelectorAll('.peeker')];
-  let ticking = false;
-  function reveal() {
-    ticking = false;
-    const vh = window.innerHeight;
-    peekers.forEach(p => {
-      const r = p.getBoundingClientRect();
-      const inView = r.top < vh * 0.9 && r.bottom > vh * 0.08;
-      p.classList.toggle('pop', inView);
-    });
+  function spawnOne() {
+    const mobile = window.innerWidth < 600;
+    const maxActive = mobile ? 2 : 3;
+    if (active >= maxActive) return;
+
+    const g    = ALL_GIFS[Math.floor(Math.random() * ALL_GIFS.length)];
+    const edge = EDGES[Math.floor(Math.random() * EDGES.length)];
+    const minW = mobile ? 140 : 190;
+    const maxW = mobile ? 250 : 400;
+    const w    = Math.round(minW + Math.random() * (maxW - minW));
+    const tilt = (Math.random() * 26 - 13).toFixed(1);
+    const spin = Math.random() < 0.35 ? (Math.random() < 0.5 ? -270 : 270) : 0;
+    const dur  = (0.45 + Math.random() * 0.4).toFixed(2);
+
+    const peek = document.createElement('div');
+    peek.className = `peeker e-${edge}`;
+    peek.style.width = w + 'px';
+    peek.style.setProperty('--tilt', tilt + 'deg');
+    peek.style.setProperty('--spin', spin + 'deg');
+    peek.style.setProperty('--d', dur + 's');
+    if (edge === 'left' || edge === 'right') {
+      peek.style.top = (4 + Math.random() * 68).toFixed(1) + 'vh';
+    } else {
+      peek.style.left = (4 + Math.random() * 68).toFixed(1) + 'vw';
+    }
+    peek.innerHTML = `<img src="${g.src}" loading="lazy" alt=""><span class="peek-cap">${g.cap}</span>`;
+    layer.appendChild(peek);
+    active++;
+
+    // enter next frame, hold a random beat, then retreat & clean up
+    requestAnimationFrame(() => requestAnimationFrame(() => peek.classList.add('show')));
+    const hold = 1500 + Math.random() * 2400;
+    setTimeout(() => peek.classList.remove('show'), 700 + hold);
+    setTimeout(() => { peek.remove(); active--; }, 700 + hold + 850);
   }
-  function onScroll() {
-    if (!ticking) { ticking = true; requestAnimationFrame(reveal); }
+
+  function loop() {
+    spawnOne();
+    setTimeout(loop, 650 + Math.random() * 1700);
   }
-  sizeLayer();
-  reveal();
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', () => { sizeLayer(); reveal(); });
-  window.addEventListener('load', () => { sizeLayer(); reveal(); });
+  spawnOne();
+  setTimeout(() => { spawnOne(); loop(); }, 800);
 }
 
 // Ambient floating food in the background — always-on chaos
@@ -1048,7 +1052,7 @@ buildWheel();
 updateSoundUI();
 renderStatBadge();
 buildFoodChaos();
-buildScrollPops();
+startGifChaos();
 
 /* ---------- Intro loader ---------- */
 (function introLoader() {

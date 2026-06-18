@@ -980,55 +980,53 @@ body.is-spinning .food-float { animation-duration: 4s; opacity: 0.36; }
 }
 @keyframes gif-pop { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-/* ---------- Scroll pop-up GIFs (peekers) ---------- */
+/* ---------- GIF chaos: big peekers that pop in & out from every edge ---------- */
 .pop-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  position: fixed;
+  inset: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 3;
 }
-/* The .peeker is a stable, untransformed anchor with real layout geometry, so
-   getBoundingClientRect() reveals it reliably regardless of tab visibility;
-   the inner element does the scale/fade pop. */
+/* Each peeker slides in from a random edge, holds a beat, then retreats.
+   Big, tilted, randomised by JS via --tilt / --spin / --d / width / position. */
 .peeker {
-  position: absolute;
-  width: clamp(130px, 22vw, 230px);
-}
-.peeker.left  { left: -14px; }
-.peeker.right { right: -14px; }
-.peeker-inner {
+  position: fixed;
+  pointer-events: none;
   opacity: 0;
-  transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.34, 1.8, 0.5, 1);
+  z-index: 3;
+  will-change: transform, opacity;
+  transition: transform var(--d, 0.62s) cubic-bezier(0.34, 1.7, 0.5, 1), opacity 0.4s ease;
 }
-.peeker.left  .peeker-inner { transform-origin: left center;  transform: translateX(-30px) rotate(-16deg) scale(0.25); }
-.peeker.right .peeker-inner { transform-origin: right center; transform: translateX(30px)  rotate(16deg)  scale(0.25); }
-.peeker.pop .peeker-inner { opacity: 1; }
-.peeker.left.pop  .peeker-inner { transform: translateX(0) rotate(var(--tilt, -4deg)) scale(1); }
-.peeker.right.pop .peeker-inner { transform: translateX(0) rotate(var(--tilt, 4deg))  scale(1); }
+.peeker.show { opacity: 1; }
+.peeker.e-left        { left: 0;   transform: translate(-100%, 0) rotate(calc(var(--tilt, 0deg) + var(--spin, 0deg))) scale(0.78); }
+.peeker.e-left.show   { transform: translate(-16%, 0)  rotate(var(--tilt, 0deg)) scale(1); }
+.peeker.e-right       { right: 0;  transform: translate(100%, 0)  rotate(calc(var(--tilt, 0deg) + var(--spin, 0deg))) scale(0.78); }
+.peeker.e-right.show  { transform: translate(16%, 0)   rotate(var(--tilt, 0deg)) scale(1); }
+.peeker.e-top         { top: 0;    transform: translate(0, -100%) rotate(calc(var(--tilt, 0deg) + var(--spin, 0deg))) scale(0.78); }
+.peeker.e-top.show    { transform: translate(0, -14%)  rotate(var(--tilt, 0deg)) scale(1); }
+.peeker.e-bottom      { bottom: 0; transform: translate(0, 100%)  rotate(calc(var(--tilt, 0deg) + var(--spin, 0deg))) scale(0.78); }
+.peeker.e-bottom.show { transform: translate(0, 14%)   rotate(var(--tilt, 0deg)) scale(1); }
 .peeker img {
   display: block;
   width: 100%;
-  border: 4px solid var(--gold);
-  border-radius: 14px;
+  border: 5px solid var(--gold);
+  border-radius: 16px;
   background: #1a0d0d;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.7), 0 0 36px rgba(220,20,60,0.45);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.78), 0 0 55px rgba(220,20,60,0.5);
 }
 .peek-cap {
   display: block;
   text-align: center;
   font-family: 'Bebas Neue', sans-serif;
   letter-spacing: 2px;
-  font-size: clamp(13px, 1.8vw, 18px);
+  font-size: clamp(15px, 2.2vw, 22px);
   color: var(--gold);
-  background: rgba(10,6,6,0.9);
+  background: rgba(10,6,6,0.92);
   border: 2px solid var(--red);
   border-radius: 8px;
   margin-top: -6px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   transform: rotate(-2deg);
   box-shadow: 0 4px 12px rgba(0,0,0,0.6);
 }
@@ -1269,7 +1267,6 @@ body.ultra-chaos .spin-btn { animation-duration: 0.6s; }
   .footer { padding: 30px 16px; font-size: 12px; }
   .smoke { width: 360px; height: 360px; filter: blur(50px); }
   .sound-toggle { width: 46px; height: 46px; font-size: 21px; }
-  .peeker { width: clamp(96px, 30vw, 150px); }
   .modal-gif { margin-top: 12px; }
   .meters { gap: 8px; }
   .meter { padding: 8px 12px; }

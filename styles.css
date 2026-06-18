@@ -75,8 +75,8 @@ button { touch-action: manipulation; }
 }
 
 @keyframes flame-pulse {
-  0%   { opacity: 0.7; transform: scale(1); }
-  100% { opacity: 1;   transform: scale(1.08); }
+  0%   { opacity: 0.7; transform: translate3d(calc(var(--px, 0) * -28px), calc(var(--py, 0) * -28px), 0) scale(1); }
+  100% { opacity: 1;   transform: translate3d(calc(var(--px, 0) * -28px), calc(var(--py, 0) * -28px), 0) scale(1.08); }
 }
 
 .smoke {
@@ -94,8 +94,8 @@ button { touch-action: manipulation; }
 .smoke-2 { background: radial-gradient(circle, #dc143c, transparent 70%); bottom: -200px; right: -200px; animation: drift 22s ease-in-out infinite alternate-reverse; }
 
 @keyframes drift {
-  0%   { transform: translate(0,0) scale(1); }
-  100% { transform: translate(100px, -80px) scale(1.2); }
+  0%   { transform: translate3d(calc(var(--px, 0) * -45px), calc(var(--py, 0) * -45px), 0) scale(1); }
+  100% { transform: translate3d(calc(100px + var(--px, 0) * -45px), calc(-80px + var(--py, 0) * -45px), 0) scale(1.2); }
 }
 
 /* ---------- Intro loader ---------- */
@@ -186,6 +186,8 @@ button { touch-action: manipulation; }
   border-bottom: 4px solid var(--red);
   box-shadow: 0 15px 50px rgba(220, 20, 60, 0.4);
   background: linear-gradient(180deg, rgba(0,0,0,0.6), transparent);
+  will-change: transform;
+  transform: translate3d(calc(var(--px, 0) * 12px), calc(var(--py, 0) * 12px), 0);
 }
 
 .hero-stars {
@@ -401,6 +403,37 @@ button { touch-action: manipulation; }
 
 .spin-btn:active { transform: scale(0.94); }
 .spin-btn:disabled { cursor: wait; opacity: 0.75; animation: none; }
+
+/* Hold-to-charge: a power ring fills around the button as you hold */
+.spin-btn::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  background: conic-gradient(var(--gold) calc(var(--charge, 0) * 360deg), rgba(0,0,0,0.45) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 11px), #000 calc(100% - 10px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 11px), #000 calc(100% - 10px));
+  opacity: 0;
+  z-index: 4;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.spin-btn.charging::after { opacity: 1; }
+.spin-btn.charging {
+  animation: none;
+  transform: scale(calc(1 + var(--charge, 0) * 0.12));
+  box-shadow:
+    0 0 calc(60px + var(--charge, 0) * 130px) rgba(255, 87, 34, calc(0.6 + var(--charge, 0) * 0.4)),
+    0 0 calc(20px + var(--charge, 0) * 90px)  rgba(255, 23, 68, calc(0.4 + var(--charge, 0) * 0.5)),
+    inset 0 4px 25px rgba(255, 215, 0, 0.5);
+}
+.spin-btn.charging .spin-btn-inner { animation: charge-rattle 0.11s linear infinite; }
+@keyframes charge-rattle {
+  0%, 100% { transform: translate(0, 0); }
+  25%      { transform: translate(1.5px, -1px); }
+  50%      { transform: translate(-1.5px, 1px); }
+  75%      { transform: translate(1px, 1.5px); }
+}
 
 .spin-btn-inner {
   display: flex;
@@ -883,10 +916,12 @@ body.shake { animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
 /* ---------- Ambient food chaos (always-on background) ---------- */
 .food-chaos {
   position: fixed;
-  inset: 0;
+  inset: -60px;
   z-index: 1;
   pointer-events: none;
   overflow: hidden;
+  will-change: transform;
+  transform: translate3d(calc(var(--px, 0) * 26px), calc(var(--py, 0) * 26px), 0);
 }
 .food-float {
   position: absolute;
@@ -1339,7 +1374,7 @@ body.ultra-chaos .spin-btn { animation-duration: 0.6s; }
   .dish-reel.spinning .dish-reel-item,
   .dish-reel.landed,
   .boom-flash, .jackpot, .jackpot-text, .trail-bit,
-  .stat-badge, .ultra-tint { animation: none !important; }
+  .stat-badge, .ultra-tint, .spin-btn-inner { animation: none !important; }
   body.ultra-chaos .ultra-tint { opacity: 0; }
   * { transition-duration: 0.1s !important; }
 }

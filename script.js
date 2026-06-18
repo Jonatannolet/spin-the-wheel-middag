@@ -282,6 +282,34 @@ function playJackpot() {
   notes.forEach((f, i) => tone(f, 0.18, 'square', 0.13, i * 0.07));
 }
 
+// Rising "charge up" tone while the spin button is held
+const CHARGE_MAX = 1400;   // ms to reach full charge
+let chargeOsc = null, chargeGain = null;
+function startChargeTone() {
+  if (muted || !audioCtx || chargeOsc) return;
+  const t = audioCtx.currentTime;
+  chargeOsc = audioCtx.createOscillator();
+  chargeGain = audioCtx.createGain();
+  chargeOsc.type = 'sawtooth';
+  chargeOsc.frequency.setValueAtTime(110, t);
+  chargeOsc.frequency.linearRampToValueAtTime(880, t + CHARGE_MAX / 1000);
+  chargeGain.gain.setValueAtTime(0.0001, t);
+  chargeGain.gain.exponentialRampToValueAtTime(0.07, t + 0.05);
+  chargeOsc.connect(chargeGain).connect(audioCtx.destination);
+  chargeOsc.start(t);
+}
+function stopChargeTone() {
+  if (!chargeOsc) return;
+  const t = audioCtx.currentTime;
+  try {
+    chargeGain.gain.cancelScheduledValues(t);
+    chargeGain.gain.setValueAtTime(chargeGain.gain.value, t);
+    chargeGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+    chargeOsc.stop(t + 0.12);
+  } catch (e) {}
+  chargeOsc = null; chargeGain = null;
+}
+
 function buzz(pattern) {
   if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
 }
@@ -442,9 +470,10 @@ let currentRotation = 0;
 let isSpinning = false;
 let lastCountryIndex = -1;
 let lastResult = null;        // { country }
+let currentCharge = 0;        // 0..1 hold-to-charge power for the current spin
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function spin() {
+function spin(charge = 0) {
   if (isSpinning) return;
   initAudio(); resumeAudio();
   playWhoosh();
@@ -454,16 +483,18 @@ function spin() {
   do {
     targetIndex = Math.floor(Math.random() * countries.length);
   } while (countries.length > 1 && targetIndex === lastCountryIndex);
-  spinToIndex(targetIndex);
+  spinToIndex(targetIndex, charge);
 }
 
-function spinToIndex(targetIndex) {
+function spinToIndex(targetIndex, charge = 0) {
   if (isSpinning) return;
   isSpinning = true;
+  currentCharge = charge;
   spinBtn.disabled = true;
   triggerFocus();
 
-  const extraSpins = 6 + Math.floor(Math.random() * 4);
+  // More charge → more full rotations in the same time = a faster, wilder spin
+  const extraSpins = 6 + Math.floor(Math.random() * 4) + Math.round(charge * 12);
   const segmentCenter = targetIndex * SEG;
   const jitter = (Math.random() - 0.5) * (SEG * 0.7);
   const currentMod = ((currentRotation % 360) + 360) % 360;
@@ -544,8 +575,8 @@ function revealCountry(country) {
   playWin();
   buzz([0, 40, 60, 120]);
   showToast(randomQuip());
-  // ~1-in-6 chance of a full JACKPOT celebration on top of everything
-  if (Math.random() < 0.16) setTimeout(triggerJackpot, 380);
+  // ~1-in-6 base chance of a full JACKPOT — a full charge tilts the odds way up
+  if (Math.random() < 0.16 + currentCharge * 0.45) setTimeout(triggerJackpot, 380);
 }
 
 // All chaos GIFs — used for scroll pop-ups and modal reactions.
@@ -1001,9 +1032,93 @@ function activateUltraChaos() {
 }
 
 /* ============================================================
+   HOLD-TO-CHARGE — press & hold the SPIN button to power up
+   ============================================================ */
+let charging = false, chargeStart = 0, chargeRAF = 0;
+function chargeAmount() {
+  return Math.max(0, Math.min(1, (performance.now() - chargeStart) / CHARGE_MAX));
+}
+function beginCharge() {
+  if (isSpinning || charging) return;
+  initAudio(); resumeAudio(); requestGyro();
+  charging = true;
+  chargeStart = performance.now();
+  spinBtn.classList.add('charging');
+  spinBtn.style.setProperty('--charge', '0');
+  startChargeTone();
+  buzz(10);
+  rampCharge();
+}
+function rampCharge() {
+  if (!charging) return;
+  spinBtn.style.setProperty('--charge', chargeAmount().toFixed(3));
+  chargeRAF = requestAnimationFrame(rampCharge);
+}
+function endCharge() {
+  if (!charging) return;
+  charging = false;
+  cancelAnimationFrame(chargeRAF);
+  const amt = chargeAmount();
+  spinBtn.classList.remove('charging');
+  spinBtn.style.setProperty('--charge', '0');
+  stopChargeTone();
+  // Discharge FX scaled to how hard you charged
+  if (!reduceMotion && amt > 0.15) {
+    flameBurst();
+    shakeScreen();
+    if (amt > 0.6) boomFlash();
+  }
+  buzz(amt > 0.6 ? [0, 30, 30, 80] : 20);
+  spin(amt);
+}
+
+/* ============================================================
+   REACTIVE SCENE — parallax tilt from pointer + device gyro
+   ============================================================ */
+let gyroAsked = false;
+function requestGyro() {
+  if (gyroAsked) return;
+  gyroAsked = true;
+  const D = window.DeviceOrientationEvent;
+  if (D && typeof D.requestPermission === 'function') {
+    D.requestPermission().catch(() => {});
+  }
+}
+(function sceneParallax() {
+  if (reduceMotion) return;
+  const root = document.documentElement;
+  let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+  const clamp = (v) => Math.max(-1, Math.min(1, v));
+  function aim(nx, ny) {
+    tx = clamp(nx); ty = clamp(ny);
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  function tick() {
+    cx += (tx - cx) * 0.12;
+    cy += (ty - cy) * 0.12;
+    root.style.setProperty('--px', cx.toFixed(3));
+    root.style.setProperty('--py', cy.toFixed(3));
+    if (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001) {
+      raf = requestAnimationFrame(tick);
+    } else { raf = 0; }
+  }
+  window.addEventListener('pointermove', (e) => {
+    aim((e.clientX / window.innerWidth) * 2 - 1, (e.clientY / window.innerHeight) * 2 - 1);
+  }, { passive: true });
+  window.addEventListener('deviceorientation', (e) => {
+    if (e.gamma == null || e.beta == null) return;
+    aim(e.gamma / 35, (e.beta - 45) / 35);
+  }, { passive: true });
+})();
+
+/* ============================================================
    WIRING
    ============================================================ */
-spinBtn.addEventListener('click', spin);
+// Hold-to-charge: pointer drives mouse/touch; keyboard "click" (detail===0) still spins.
+spinBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); beginCharge(); });
+window.addEventListener('pointerup', endCharge);
+window.addEventListener('pointercancel', endCharge);
+spinBtn.addEventListener('click', (e) => { if (e.detail === 0 && !isSpinning) spin(); });
 closeModalBtn.addEventListener('click', () => { playClick(); hideModal(); });
 spinAgainBtn.addEventListener('click', () => {
   playClick();
@@ -1068,7 +1183,7 @@ startGifChaos();
     setTimeout(() => intro.remove(), 700);
   }
   // Skip on tap (and prime audio with the gesture)
-  intro.addEventListener('click', () => { initAudio(); resumeAudio(); hideIntro(); });
+  intro.addEventListener('click', () => { initAudio(); resumeAudio(); requestGyro(); hideIntro(); });
   // Hide after load, respecting a minimum on-screen time
   window.addEventListener('load', () => {
     const wait = Math.max(0, MIN_MS - (performance.now() - start));

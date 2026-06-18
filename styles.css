@@ -898,6 +898,76 @@ body.is-spinning .food-float { animation-duration: 4s; opacity: 0.36; }
   }
 }
 
+/* ---------- Modal reaction GIF ---------- */
+.modal-gif {
+  display: block;
+  width: min(100%, 360px);
+  margin: 16px auto 0;
+  border: 3px solid var(--gold);
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.7), 0 0 26px rgba(255,215,0,0.3);
+  animation: gif-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.4);
+}
+@keyframes gif-pop { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+/* ---------- Gordon Cam (GIF strip) ---------- */
+.gordon-cam {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 20px 70px;
+  text-align: center;
+}
+.gordon-cam-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(34px, 6vw, 68px);
+  letter-spacing: 8px;
+  color: var(--white);
+  margin-bottom: 36px;
+  text-shadow: 4px 4px 0 var(--red), 8px 8px 0 rgba(0,0,0,0.8);
+  transform: skew(-3deg);
+  display: inline-block;
+}
+.gordon-grid {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.gordon-card {
+  position: relative;
+  margin: 0;
+  border: 3px solid var(--red);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.gordon-card img {
+  display: block;
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+  background: #1a0d0d;
+}
+.gordon-card figcaption {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 2px;
+  font-size: clamp(16px, 2.2vw, 22px);
+  color: var(--gold);
+  padding: 14px 12px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.5), rgba(220,20,60,0.25));
+}
+@media (hover: hover) {
+  .gordon-card:hover {
+    transform: translateY(-10px) skew(-2deg) scale(1.02);
+    border-color: var(--gold);
+    box-shadow: 0 22px 50px rgba(220,20,60,0.6), 0 0 50px rgba(255,215,0,0.35);
+  }
+  .gordon-card:hover figcaption { color: var(--white); }
+}
+
 /* ---------- Footer ---------- */
 .footer {
   position: relative;
@@ -959,6 +1029,10 @@ body.is-spinning .food-float { animation-duration: 4s; opacity: 0.36; }
   .footer { padding: 30px 16px; font-size: 12px; }
   .smoke { width: 360px; height: 360px; filter: blur(50px); }
   .sound-toggle { width: 46px; height: 46px; font-size: 21px; }
+  .gordon-cam { padding: 10px 16px 50px; }
+  .gordon-cam-title { letter-spacing: 4px; margin-bottom: 24px; }
+  .gordon-card img { height: 200px; }
+  .modal-gif { margin-top: 12px; }
   .meters { gap: 8px; }
   .meter { padding: 8px 12px; }
   .drumroll-inner { padding: 12px 18px; }

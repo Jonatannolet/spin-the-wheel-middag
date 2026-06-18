@@ -539,9 +539,13 @@ function revealCountry(country) {
   showToast(randomQuip());
 }
 
+const REACTION_GIFS = ['gifs/idiot-sandwich.gif', 'gifs/delicious-steak.gif', 'gifs/lets-do-this.gif'];
+
 function openResultModal(country) {
   const flagEl = document.getElementById('modalFlag');
   flagEl.innerHTML = `<img class="flag-img" src="${flagSrc(country)}" alt="${country.name}-flagg">`;
+  const gifEl = document.getElementById('modalGif');
+  if (gifEl) gifEl.src = REACTION_GIFS[Math.floor(Math.random() * REACTION_GIFS.length)];
   document.getElementById('modalCountry').textContent = country.name;
   document.getElementById('modalTagline').textContent = country.tagline;
   document.getElementById('modalDishes').textContent = country.dishes;

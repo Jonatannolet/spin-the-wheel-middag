@@ -204,15 +204,6 @@ button { touch-action: manipulation; }
 
 .title { line-height: 0.85; letter-spacing: 4px; font-family: 'Bebas Neue', sans-serif; }
 
-.title-eyebrow {
-  display: block;
-  font-size: clamp(14px, 1.6vw, 22px);
-  color: var(--cream);
-  letter-spacing: 10px;
-  opacity: 0.8;
-  margin-bottom: 10px;
-}
-
 .title-main {
   display: block;
   font-size: clamp(42px, 8vw, 110px);
@@ -989,63 +980,234 @@ body.is-spinning .food-float { animation-duration: 4s; opacity: 0.36; }
 }
 @keyframes gif-pop { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-/* ---------- Gordon Cam (GIF strip) ---------- */
-.gordon-cam {
-  position: relative;
-  z-index: 2;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px 20px 70px;
-  text-align: center;
-}
-.gordon-cam-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(34px, 6vw, 68px);
-  letter-spacing: 8px;
-  color: var(--white);
-  margin-bottom: 36px;
-  text-shadow: 4px 4px 0 var(--red), 8px 8px 0 rgba(0,0,0,0.8);
-  transform: skew(-3deg);
-  display: inline-block;
-}
-.gordon-grid {
-  display: grid;
-  gap: 22px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-}
-.gordon-card {
-  position: relative;
-  margin: 0;
-  border: 3px solid var(--red);
-  border-radius: 16px;
+/* ---------- Scroll pop-up GIFs (peekers) ---------- */
+.pop-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  background: #000;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.6);
-  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  z-index: 3;
 }
-.gordon-card img {
+/* The .peeker is a stable, untransformed anchor with real layout geometry, so
+   getBoundingClientRect() reveals it reliably regardless of tab visibility;
+   the inner element does the scale/fade pop. */
+.peeker {
+  position: absolute;
+  width: clamp(130px, 22vw, 230px);
+}
+.peeker.left  { left: -14px; }
+.peeker.right { right: -14px; }
+.peeker-inner {
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.34, 1.8, 0.5, 1);
+}
+.peeker.left  .peeker-inner { transform-origin: left center;  transform: translateX(-30px) rotate(-16deg) scale(0.25); }
+.peeker.right .peeker-inner { transform-origin: right center; transform: translateX(30px)  rotate(16deg)  scale(0.25); }
+.peeker.pop .peeker-inner { opacity: 1; }
+.peeker.left.pop  .peeker-inner { transform: translateX(0) rotate(var(--tilt, -4deg)) scale(1); }
+.peeker.right.pop .peeker-inner { transform: translateX(0) rotate(var(--tilt, 4deg))  scale(1); }
+.peeker img {
   display: block;
   width: 100%;
-  height: 260px;
-  object-fit: cover;
+  border: 4px solid var(--gold);
+  border-radius: 14px;
   background: #1a0d0d;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.7), 0 0 36px rgba(220,20,60,0.45);
 }
-.gordon-card figcaption {
+.peek-cap {
+  display: block;
+  text-align: center;
   font-family: 'Bebas Neue', sans-serif;
   letter-spacing: 2px;
-  font-size: clamp(16px, 2.2vw, 22px);
+  font-size: clamp(13px, 1.8vw, 18px);
   color: var(--gold);
-  padding: 14px 12px;
-  background: linear-gradient(180deg, rgba(0,0,0,0.5), rgba(220,20,60,0.25));
+  background: rgba(10,6,6,0.9);
+  border: 2px solid var(--red);
+  border-radius: 8px;
+  margin-top: -6px;
+  padding: 3px 8px;
+  transform: rotate(-2deg);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
 }
+
+/* ============================================================
+   NEW CHAOS · stat-badge, dish slot, jackpot, flash, trail, ULTRA
+   ============================================================ */
+
+/* ---------- Stat badge (kokke-rank + spinn-teller) ---------- */
+.stat-badge {
+  position: fixed;
+  top: calc(16px + env(safe-area-inset-top));
+  left: calc(16px + env(safe-area-inset-left));
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 8px 14px;
+  border-radius: 14px;
+  border: 2px solid var(--gold);
+  background: rgba(10,6,6,0.8);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif;
+  text-align: left;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.25);
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+}
+.stat-badge:active { transform: scale(0.92); }
 @media (hover: hover) {
-  .gordon-card:hover {
-    transform: translateY(-10px) skew(-2deg) scale(1.02);
-    border-color: var(--gold);
-    box-shadow: 0 22px 50px rgba(220,20,60,0.6), 0 0 50px rgba(255,215,0,0.35);
-  }
-  .gordon-card:hover figcaption { color: var(--white); }
+  .stat-badge:hover { transform: scale(1.06) rotate(-2deg); box-shadow: 0 8px 30px rgba(255,215,0,0.55); }
 }
+.stat-rank { color: var(--gold); font-size: 18px; letter-spacing: 2px; line-height: 1; text-shadow: 0 0 12px rgba(255,215,0,0.5); }
+.stat-spins { color: var(--cream); font-size: 12px; letter-spacing: 2px; opacity: 0.8; }
+.stat-badge.bump { animation: stat-bump 0.5s cubic-bezier(0.175,0.885,0.32,1.4); }
+@keyframes stat-bump { 0% { transform: scale(1); } 40% { transform: scale(1.28) rotate(-5deg); } 100% { transform: scale(1); } }
+.stat-badge.rankup { animation: stat-rankup 0.9s ease; }
+@keyframes stat-rankup {
+  0%,100% { box-shadow: 0 6px 20px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.25); transform: scale(1); }
+  35%     { box-shadow: 0 0 55px rgba(255,215,0,1), 0 0 100px rgba(255,87,34,0.85); transform: scale(1.32) rotate(-4deg); }
+}
+
+/* ---------- Dish slot machine (modal) ---------- */
+.dish-slot {
+  margin: 4px auto 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.dish-slot-label {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 4px;
+  font-size: 16px;
+  color: var(--gold);
+  opacity: 0.9;
+}
+.dish-reel {
+  position: relative;
+  overflow: hidden;
+  min-width: min(86vw, 420px);
+  max-width: 100%;
+  height: 56px;
+  border: 3px solid var(--gold);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.7), rgba(40,10,10,0.7));
+  box-shadow: inset 0 0 24px rgba(0,0,0,0.8), 0 0 26px rgba(255,215,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dish-reel-item {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(20px, 4vw, 30px);
+  letter-spacing: 2px;
+  color: var(--white);
+  white-space: nowrap;
+  padding: 0 14px;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.8);
+}
+.dish-reel.spinning .dish-reel-item { animation: dish-blur 0.09s linear infinite alternate; }
+@keyframes dish-blur {
+  0%   { transform: translateY(-7px); filter: blur(1.5px); opacity: 0.55; }
+  100% { transform: translateY(7px);  filter: blur(1.5px); opacity: 0.55; }
+}
+.dish-reel.landed { animation: dish-land 0.5s cubic-bezier(0.175,0.885,0.32,1.4); border-color: var(--orange-bright); }
+.dish-reel.landed .dish-reel-item { color: var(--gold); text-shadow: 0 0 18px rgba(255,215,0,0.85), 2px 2px 0 rgba(0,0,0,0.8); }
+@keyframes dish-land { 0% { transform: scale(1.14); } 60% { transform: scale(0.96); } 100% { transform: scale(1); } }
+
+/* ---------- Boom flash (on reveal) ---------- */
+.boom-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(255,255,255,0.9), rgba(255,215,0,0.5) 35%, transparent 70%);
+}
+.boom-flash.go { animation: boom-flash 0.5s ease-out; }
+@keyframes boom-flash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---------- Jackpot mega-celebration ---------- */
+.jackpot {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  text-align: center;
+  background: radial-gradient(ellipse at center, rgba(220,20,60,0.35), transparent 70%);
+}
+.jackpot.go { display: flex; animation: jackpot-fade 1.9s ease forwards; }
+@keyframes jackpot-fade { 0% { opacity: 0; } 10% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+.jackpot-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(64px, 20vw, 240px);
+  letter-spacing: 6px;
+  line-height: 0.9;
+  background: linear-gradient(180deg, var(--gold), var(--orange-bright) 50%, var(--red));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 40px rgba(255,215,0,0.9)) drop-shadow(4px 4px 0 rgba(0,0,0,0.9));
+  animation: jackpot-pop 0.8s cubic-bezier(0.175,0.885,0.32,1.4);
+}
+@keyframes jackpot-pop {
+  0%   { transform: scale(0.2) rotate(-15deg); }
+  60%  { transform: scale(1.18) rotate(5deg); }
+  100% { transform: scale(1) rotate(-3deg); }
+}
+.jackpot-sub {
+  font-family: 'Permanent Marker', cursive;
+  font-size: clamp(14px, 3vw, 26px);
+  color: var(--cream);
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.9);
+  transform: rotate(-2deg);
+}
+
+/* ---------- Cursor / touch food trail ---------- */
+.cursor-trail-layer { position: fixed; inset: 0; z-index: 97; pointer-events: none; overflow: hidden; }
+.trail-bit {
+  position: fixed;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: trail-fade 0.9s ease-out forwards;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+@keyframes trail-fade {
+  0%   { opacity: 0.95; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, calc(-50% + 42px)) scale(0.4) rotate(70deg); }
+}
+
+/* ---------- Spinning intensifies existing background FX ---------- */
+body.is-spinning .wheel-ring { animation-duration: 1.6s; }
+body.is-spinning .wheel-glow { animation-duration: 0.8s; }
+
+/* ---------- ULTRA CHAOS (Konami easter egg) ---------- */
+.ultra-tint {
+  position: fixed;
+  inset: 0;
+  z-index: 96;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: color;
+  background: conic-gradient(from 0deg, #ff1744, #ff9800, #ffd700, #00e676, #2979ff, #d500f9, #ff1744);
+  transition: opacity 0.4s ease;
+}
+body.ultra-chaos .ultra-tint { opacity: 0.45; animation: ultra-spin 3s linear infinite; }
+@keyframes ultra-spin { to { transform: rotate(360deg); } }
+body.ultra-chaos .wheel-ring { animation-duration: 1.1s; }
+body.ultra-chaos .tag-track { animation-duration: 7s; }
+body.ultra-chaos .flame-bg { animation-duration: 1.4s; }
+body.ultra-chaos .food-float { animation-duration: 3s; opacity: 0.4; }
+body.ultra-chaos .spin-btn { animation-duration: 0.6s; }
 
 /* ---------- Footer ---------- */
 .footer {
@@ -1078,7 +1240,6 @@ body.is-spinning .food-float { animation-duration: 4s; opacity: 0.36; }
 @media (max-width: 720px) {
   .hero { padding: 50px 16px 36px; }
   .hero-stars { letter-spacing: 8px; margin-bottom: 14px; }
-  .title-eyebrow { letter-spacing: 6px; margin-bottom: 6px; }
   .subtitle { margin: 18px 0 14px; }
   .chef-strip { gap: 10px; margin-top: 18px; }
   .chef-strip span { padding: 8px 14px; letter-spacing: 2px; }
@@ -1108,9 +1269,7 @@ body.is-spinning .food-float { animation-duration: 4s; opacity: 0.36; }
   .footer { padding: 30px 16px; font-size: 12px; }
   .smoke { width: 360px; height: 360px; filter: blur(50px); }
   .sound-toggle { width: 46px; height: 46px; font-size: 21px; }
-  .gordon-cam { padding: 10px 16px 50px; }
-  .gordon-cam-title { letter-spacing: 4px; margin-bottom: 24px; }
-  .gordon-card img { height: 200px; }
+  .peeker { width: clamp(96px, 30vw, 150px); }
   .modal-gif { margin-top: 12px; }
   .meters { gap: 8px; }
   .meter { padding: 8px 12px; }
@@ -1120,7 +1279,6 @@ body.is-spinning .food-float { animation-duration: 4s; opacity: 0.36; }
 @media (max-width: 480px) {
   .hero { padding: 40px 14px 30px; }
   .hero-stars { font-size: 16px; letter-spacing: 6px; }
-  .title-eyebrow { font-size: 12px; letter-spacing: 5px; }
   .title-main { font-size: 44px; letter-spacing: 2px; text-shadow: 0 0 20px rgba(255,255,255,0.2), 3px 3px 0 var(--red), 6px 6px 0 rgba(0,0,0,0.8); }
   .title-sub { font-size: 68px; letter-spacing: 2px; }
   .subtitle { font-size: 15px; letter-spacing: 1px; }
@@ -1181,5 +1339,10 @@ body.is-spinning .food-float { animation-duration: 4s; opacity: 0.36; }
   body.is-spinning .rules,
   body.is-spinning .footer { filter: brightness(0.6); }
   .food-float { animation: none !important; }
+  .dish-reel.spinning .dish-reel-item,
+  .dish-reel.landed,
+  .boom-flash, .jackpot, .jackpot-text, .trail-bit,
+  .stat-badge, .ultra-tint { animation: none !important; }
+  body.ultra-chaos .ultra-tint { opacity: 0; }
   * { transition-duration: 0.1s !important; }
 }

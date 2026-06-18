@@ -276,6 +276,11 @@ function playWin() {
   const notes = [523, 659, 784, 1047];
   notes.forEach((f, i) => tone(f, 0.32, 'triangle', 0.18, i * 0.09));
 }
+function playJackpot() {
+  if (muted || !audioCtx) return;
+  const notes = [523, 659, 784, 1047, 1319, 1047, 1319, 1568];
+  notes.forEach((f, i) => tone(f, 0.18, 'square', 0.13, i * 0.07));
+}
 
 function buzz(pattern) {
   if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
@@ -529,17 +534,33 @@ let savedScrollY = 0;
 
 function revealCountry(country) {
   lastResult = { country };
+  recordSpin(country);
   openResultModal(country);
   launchRain(country.foodEmojis);
   foodExplosion(country.foodEmojis);
   shakeScreen();
   flameBurst();
+  boomFlash();
   playWin();
   buzz([0, 40, 60, 120]);
   showToast(randomQuip());
+  // ~1-in-6 chance of a full JACKPOT celebration on top of everything
+  if (Math.random() < 0.16) setTimeout(triggerJackpot, 380);
 }
 
-const REACTION_GIFS = ['gifs/idiot-sandwich.gif', 'gifs/delicious-steak.gif', 'gifs/lets-do-this.gif', 'gifs/dog-shit.gif'];
+// All chaos GIFs — used for scroll pop-ups and modal reactions.
+const ALL_GIFS = [
+  { src: 'gifs/lets-do-this.gif',    cap: "LET'S DO THIS" },
+  { src: 'gifs/idiot-sandwich.gif',  cap: 'IDIOT SANDWICH' },
+  { src: 'gifs/delicious-steak.gif', cap: 'DELICIOUS' },
+  { src: 'gifs/dog-shit.gif',        cap: "GORDON'S REVIEW" },
+  { src: 'gifs/pooh-hungry.gif',     cap: 'NOM NOM NOM' },
+  { src: 'gifs/jamie-sausage.gif',   cap: 'OH HUGH!' },
+  { src: 'gifs/bourdain-finger.gif', cap: 'BON APPÉTIT' },
+  { src: 'gifs/bourdain.gif',        cap: 'BOURDAIN' },
+  { src: 'gifs/bourdain-shot.gif',   cap: 'ONE MORE SHOT' }
+];
+const REACTION_GIFS = ALL_GIFS.map(g => g.src);
 
 function openResultModal(country) {
   const flagEl = document.getElementById('modalFlag');
@@ -553,6 +574,7 @@ function openResultModal(country) {
   document.getElementById('modalMeme').textContent = country.meme;
 
   renderMeters(country);
+  runDishSlot(country);
 
   savedScrollY = window.scrollY;
   document.body.style.top = `-${savedScrollY}px`;
@@ -585,6 +607,7 @@ function hideModal() {
   document.body.classList.remove('modal-open');
   document.body.style.top = '';
   window.scrollTo(0, savedScrollY);
+  if (dishSlotTimer) { clearTimeout(dishSlotTimer); dishSlotTimer = null; }
 }
 
 /* ============================================================
@@ -683,6 +706,54 @@ function foodExplosion(extra) {
   }
 }
 
+// Scroll pop-ups: GIFs that suddenly peek in from the edges as you scroll.
+function buildScrollPops() {
+  const layer = document.getElementById('popLayer');
+  if (!layer || reduceMotion) return;
+  const list = [...ALL_GIFS].sort(() => Math.random() - 0.5);
+  const n = list.length;
+  list.forEach((g, i) => {
+    const side = i % 2 === 0 ? 'left' : 'right';
+    const top = 9 + (i / n) * 80;            // spread 9%..89% down the page
+    const peek = document.createElement('div');
+    peek.className = `peeker ${side}`;
+    peek.style.top = top + '%';
+    peek.style.setProperty('--tilt', (Math.random() * 10 - 5).toFixed(1) + 'deg');
+    peek.innerHTML =
+      `<div class="peeker-inner"><img src="${g.src}" loading="lazy" alt=""><span class="peek-cap">${g.cap}</span></div>`;
+    layer.appendChild(peek);
+  });
+  // Layer must span full document height so the top:% positions resolve.
+  const sizeLayer = () => {
+    layer.style.height = Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight
+    ) + 'px';
+  };
+
+  // Reveal via scroll position (works regardless of tab visibility — IO can be
+  // throttled when the document is hidden).
+  const peekers = [...layer.querySelectorAll('.peeker')];
+  let ticking = false;
+  function reveal() {
+    ticking = false;
+    const vh = window.innerHeight;
+    peekers.forEach(p => {
+      const r = p.getBoundingClientRect();
+      const inView = r.top < vh * 0.9 && r.bottom > vh * 0.08;
+      p.classList.toggle('pop', inView);
+    });
+  }
+  function onScroll() {
+    if (!ticking) { ticking = true; requestAnimationFrame(reveal); }
+  }
+  sizeLayer();
+  reveal();
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', () => { sizeLayer(); reveal(); });
+  window.addEventListener('load', () => { sizeLayer(); reveal(); });
+}
+
 // Ambient floating food in the background — always-on chaos
 function buildFoodChaos() {
   const host = document.getElementById('foodChaos');
@@ -764,6 +835,168 @@ async function shareResult() {
 }
 
 /* ============================================================
+   STATS — kokke-rank + spinn-teller (localStorage)
+   ============================================================ */
+const RANKS = [
+  { min: 0,  name: 'COMMIS' },
+  { min: 3,  name: 'CHEF DE PARTIE' },
+  { min: 6,  name: 'SOUS CHEF' },
+  { min: 10, name: 'HEAD CHEF' },
+  { min: 16, name: 'MICHELIN' },
+  { min: 25, name: 'GORDON' }
+];
+function rankFor(spins) {
+  let name = RANKS[0].name;
+  for (const r of RANKS) if (spins >= r.min) name = r.name;
+  return name;
+}
+function loadStats() {
+  try {
+    const s = JSON.parse(localStorage.getItem('stw-stats') || '{}');
+    return { spins: s.spins || 0, countries: s.countries || {} };
+  } catch (e) { return { spins: 0, countries: {} }; }
+}
+function saveStats() {
+  try { localStorage.setItem('stw-stats', JSON.stringify(stats)); } catch (e) {}
+}
+let stats = loadStats();
+
+function renderStatBadge() {
+  const rankEl = document.getElementById('statRank');
+  const spinsEl = document.getElementById('statSpins');
+  if (rankEl) rankEl.textContent = rankFor(stats.spins);
+  if (spinsEl) spinsEl.textContent = stats.spins + ' SPINN';
+}
+function recordSpin(country) {
+  const before = rankFor(stats.spins);
+  stats.spins += 1;
+  if (country) stats.countries[country.name] = (stats.countries[country.name] || 0) + 1;
+  saveStats();
+  renderStatBadge();
+  const after = rankFor(stats.spins);
+  const badge = document.getElementById('statBadge');
+  if (badge && !reduceMotion) {
+    badge.classList.remove('bump'); void badge.offsetWidth; badge.classList.add('bump');
+  }
+  if (after !== before) {
+    if (badge) { badge.classList.add('rankup'); setTimeout(() => badge.classList.remove('rankup'), 950); }
+    setTimeout(() => showToast('👨‍🍳 FORFREMMET TIL ' + after + '!'), 700);
+  }
+}
+
+/* ============================================================
+   DISH SLOT MACHINE — picks a signature dish in the modal
+   ============================================================ */
+let dishSlotTimer = null;
+function runDishSlot(country) {
+  const reel = document.getElementById('dishReel');
+  if (!reel) return;
+  const itemEl = reel.querySelector('.dish-reel-item');
+  const list = (country.dishList && country.dishList.length) ? country.dishList : null;
+  if (dishSlotTimer) { clearTimeout(dishSlotTimer); dishSlotTimer = null; }
+  reel.classList.remove('landed', 'spinning');
+  const setItem = (d) => { if (itemEl) itemEl.textContent = `${d.emoji} ${d.navn}`; };
+  if (!list) { if (itemEl) itemEl.textContent = '🍴 ' + country.name; return; }
+  const final = list[Math.floor(Math.random() * list.length)];
+  if (reduceMotion) { setItem(final); reel.classList.add('landed'); return; }
+
+  reel.classList.add('spinning');
+  const steps = 16 + Math.floor(Math.random() * 6);
+  let delay = 70;
+  function tick(i) {
+    setItem(list[Math.floor(Math.random() * list.length)]);
+    playTick();
+    if (i >= steps) {
+      reel.classList.remove('spinning');
+      setItem(final);
+      reel.classList.add('landed');
+      playClick();
+      dishSlotTimer = null;
+      return;
+    }
+    delay *= 1.12;            // slow down — slot-machine ease-out
+    dishSlotTimer = setTimeout(() => tick(i + 1), delay);
+  }
+  dishSlotTimer = setTimeout(() => tick(0), delay);
+}
+
+/* ============================================================
+   BOOM FLASH + JACKPOT
+   ============================================================ */
+function boomFlash() {
+  if (reduceMotion) return;
+  const el = document.getElementById('boomFlash');
+  if (!el) return;
+  el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+}
+function triggerJackpot() {
+  playJackpot();
+  buzz([0, 60, 40, 60, 40, 140]);
+  showToast('🎰 JACKPOT! DOBBEL PORSJON KAOS!');
+  const jp = document.getElementById('jackpot');
+  if (reduceMotion || !jp) return;
+  jp.classList.remove('go'); void jp.offsetWidth; jp.classList.add('go');
+  setTimeout(() => jp.classList.remove('go'), 1900);
+  flameBurst();
+  launchRain();
+}
+
+/* ============================================================
+   CURSOR / TOUCH FOOD TRAIL — sprinkles follow the pointer
+   ============================================================ */
+const TRAIL_EMOJIS = ['✨','🔥','🍕','🍝','🌶️','🧄','🥑','🍅','🧀','🍷','💥','⭐','🍗'];
+let trailLast = 0, trailCount = 0;
+const TRAIL_MAX = 40;
+function spawnTrail(x, y) {
+  if (reduceMotion) return;
+  const now = performance.now();
+  if (now - trailLast < 55 || trailCount >= TRAIL_MAX) return;
+  trailLast = now;
+  const layer = document.getElementById('trailLayer');
+  if (!layer) return;
+  const bit = document.createElement('span');
+  bit.className = 'trail-bit';
+  bit.textContent = TRAIL_EMOJIS[Math.floor(Math.random() * TRAIL_EMOJIS.length)];
+  bit.style.left = x + 'px';
+  bit.style.top = y + 'px';
+  bit.style.fontSize = (14 + Math.random() * 18) + 'px';
+  layer.appendChild(bit);
+  trailCount++;
+  setTimeout(() => { bit.remove(); trailCount--; }, 900);
+}
+
+/* ============================================================
+   KONAMI CODE → ULTRA CHAOS
+   ============================================================ */
+const KONAMI = ['arrowup','arrowup','arrowdown','arrowdown','arrowleft','arrowright','arrowleft','arrowright','b','a'];
+let konamiPos = 0, ultraTimer = null;
+function handleKonami(key) {
+  const k = key.toLowerCase();
+  if (k === KONAMI[konamiPos]) {
+    konamiPos++;
+    if (konamiPos === KONAMI.length) { konamiPos = 0; activateUltraChaos(); }
+  } else {
+    konamiPos = (k === KONAMI[0]) ? 1 : 0;
+  }
+}
+function activateUltraChaos() {
+  initAudio(); resumeAudio();
+  document.body.classList.add('ultra-chaos');
+  showToast('🌈 ULTRA CHAOS UNLOCKED!');
+  playJackpot();
+  if (!reduceMotion) {
+    launchRain();
+    let bursts = 0;
+    const iv = setInterval(() => {
+      launchRain(); shakeScreen();
+      if (++bursts >= 5) clearInterval(iv);
+    }, 1100);
+  }
+  clearTimeout(ultraTimer);
+  ultraTimer = setTimeout(() => document.body.classList.remove('ultra-chaos'), 6500);
+}
+
+/* ============================================================
    WIRING
    ============================================================ */
 spinBtn.addEventListener('click', spin);
@@ -787,6 +1020,7 @@ if (soundToggle) {
 
 modal.addEventListener('click', (e) => { if (e.target === modal) hideModal(); });
 document.addEventListener('keydown', (e) => {
+  handleKonami(e.key);
   if (e.key === 'Escape') hideModal();
   if (e.key === ' ' && !isSpinning && !modal.classList.contains('active')) {
     e.preventDefault();
@@ -794,9 +1028,27 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// Stat badge: tap to reveal your most-served country
+const statBadgeEl = document.getElementById('statBadge');
+if (statBadgeEl) {
+  statBadgeEl.addEventListener('click', () => {
+    playClick();
+    const entries = Object.entries(stats.countries);
+    if (!entries.length) { showToast('🍽️ Ingen middager ennå — SPIN!'); return; }
+    entries.sort((a, b) => b[1] - a[1]);
+    const [name, n] = entries[0];
+    showToast(`🏆 Mest servert: ${name} ×${n}`);
+  });
+}
+
+// Food trail follows pointer + touch
+window.addEventListener('pointermove', (e) => spawnTrail(e.clientX, e.clientY), { passive: true });
+
 buildWheel();
 updateSoundUI();
+renderStatBadge();
 buildFoodChaos();
+buildScrollPops();
 
 /* ---------- Intro loader ---------- */
 (function introLoader() {

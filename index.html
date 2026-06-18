@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;600;700&family=Permanent+Marker&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=5" />
+  <link rel="stylesheet" href="styles.css?v=7" />
 </head>
 <body>
   <div class="intro" id="intro">
@@ -30,12 +30,23 @@
   <div class="vignette" id="vignette"></div>
 
   <button class="sound-toggle" id="soundToggle" aria-label="Skru av lyd">🔊</button>
+  <button class="stat-badge" id="statBadge" type="button" aria-label="Kokke-rangering og antall spinn">
+    <span class="stat-rank" id="statRank">COMMIS</span>
+    <span class="stat-spins" id="statSpins">0 SPINN</span>
+  </button>
   <div class="toast-host" id="toastHost" aria-live="polite"></div>
+  <div class="pop-layer" id="popLayer" aria-hidden="true"></div>
+  <div class="boom-flash" id="boomFlash" aria-hidden="true"></div>
+  <div class="jackpot" id="jackpot" aria-hidden="true">
+    <div class="jackpot-text">JACKPOT</div>
+    <div class="jackpot-sub">CHEF ER STOLT. FOR ÉN GANGS SKYLD.</div>
+  </div>
+  <div class="cursor-trail-layer" id="trailLayer" aria-hidden="true"></div>
+  <div class="ultra-tint" aria-hidden="true"></div>
 
   <header class="hero">
     <div class="hero-stars">★ ★ ★ ★ ★ ★</div>
     <h1 class="title">
-      <span class="title-eyebrow">GORDON PRESENTS</span>
       <span class="title-main">SPIN THE WHEEL</span>
       <span class="title-sub">6 STJERNES MIDDAG</span>
     </h1>
@@ -119,28 +130,6 @@
     </div>
   </section>
 
-  <section class="gordon-cam">
-    <h2 class="gordon-cam-title">🎬 GORDON CAM</h2>
-    <div class="gordon-grid">
-      <figure class="gordon-card">
-        <img src="gifs/lets-do-this.gif" alt="Gordon Ramsay: let's do this" loading="lazy">
-        <figcaption>NÅR HJULET LADER OPP</figcaption>
-      </figure>
-      <figure class="gordon-card">
-        <img src="gifs/idiot-sandwich.gif" alt="Gordon Ramsay: idiot sandwich" loading="lazy">
-        <figcaption>NÅR DU HAR FLØTE I CARBONARAEN</figcaption>
-      </figure>
-      <figure class="gordon-card">
-        <img src="gifs/delicious-steak.gif" alt="Gordon Ramsay: delicious" loading="lazy">
-        <figcaption>NÅR MIDDAGEN BLIR 6 STJERNER</figcaption>
-      </figure>
-      <figure class="gordon-card">
-        <img src="gifs/dog-shit.gif" alt="Gordon Ramsay: dog shit" loading="lazy">
-        <figcaption>GORDONS ÆRLIGE ANMELDELSE</figcaption>
-      </figure>
-    </div>
-  </section>
-
   <section class="rules">
     <h2 class="rules-title">REGLER PÅ KJØKKENET</h2>
     <div class="rules-grid">
@@ -169,6 +158,11 @@
       <div class="modal-flag" id="modalFlag"></div>
       <h2 class="modal-country" id="modalCountry"></h2>
       <div class="modal-tagline" id="modalTagline"></div>
+
+      <div class="dish-slot" id="dishSlot">
+        <span class="dish-slot-label">🎰 I KVELD LAGER DU</span>
+        <div class="dish-reel" id="dishReel"><span class="dish-reel-item">🍴 …</span></div>
+      </div>
 
       <div class="meters">
         <div class="meter">
@@ -213,6 +207,6 @@
     <p class="footer-small">★ UNOFFICIAL. UNSERIOUS. UNDERCOOKED. ★</p>
   </footer>
 
-  <script src="script.js?v=5"></script>
+  <script src="script.js?v=7"></script>
 </body>
 </html>

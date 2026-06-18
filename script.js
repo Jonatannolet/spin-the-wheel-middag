@@ -184,16 +184,15 @@ const countries = [
   }
 ];
 
-const WILDCARD = {
-  name: "CHEF'S WILDCARD",
-  flag: "🌟",
-  color: "#ffd700",
-  wildcard: true
+// ISO 3166-1 codes for self-hosted flag SVGs in /flags
+// (Windows has no flag-emoji glyphs, so we render real images instead).
+const FLAG_CODES = {
+  ITALIA: 'it', SPANIA: 'es', FRANKRIKE: 'fr', INDIA: 'in', USA: 'us',
+  VIETNAM: 'vn', ARGENTINA: 'ar', MAROCCO: 'ma', ETIOPIA: 'et'
 };
+function flagSrc(country) { return `flags/${FLAG_CODES[country.name]}.svg`; }
 
-// Wheel = countries + one gold wildcard segment.
-const segments = [...countries, WILDCARD];
-const WILDCARD_INDEX = countries.length;
+const segments = countries;
 
 /* ---------- DOM refs ---------- */
 const wheelSvg     = document.getElementById('wheel');
@@ -272,13 +271,10 @@ function playWhoosh() {
   src.connect(bp).connect(g).connect(audioCtx.destination);
   src.start(t);
 }
-function playWin(jackpot = false) {
+function playWin() {
   if (muted || !audioCtx) return;
-  const notes = jackpot
-    ? [523, 659, 784, 1047, 1319, 1568]
-    : [523, 659, 784, 1047];
+  const notes = [523, 659, 784, 1047];
   notes.forEach((f, i) => tone(f, 0.32, 'triangle', 0.18, i * 0.09));
-  if (jackpot) tone(2093, 0.5, 'sine', 0.12, notes.length * 0.09);
 }
 
 function buzz(pattern) {
@@ -323,9 +319,8 @@ function buildWheel() {
     path.setAttribute('d', `M ${CX} ${CY} L ${p1.x} ${p1.y} A ${R} ${R} 0 0 1 ${p2.x} ${p2.y} Z`);
     path.setAttribute('fill', `url(#grad-${i})`);
     path.setAttribute('stroke', '#ffd700');
-    path.setAttribute('stroke-width', c.wildcard ? '3.5' : '2');
+    path.setAttribute('stroke-width', '2');
     path.classList.add('segment');
-    if (c.wildcard) path.classList.add('segment-wild');
     path.addEventListener('click', () => { if (!isSpinning) spin(); });
     wheelSvg.appendChild(path);
 
@@ -345,23 +340,44 @@ function buildWheel() {
     arcPath.setAttribute('fill', 'none');
     defs.appendChild(arcPath);
 
-    // Flag
-    const flagPos = polar(CX, CY, R * 0.5, mid);
-    const flag = document.createElementNS(SVG_NS, 'text');
-    flag.setAttribute('x', flagPos.x); flag.setAttribute('y', flagPos.y);
-    flag.setAttribute('text-anchor', 'middle');
-    flag.setAttribute('dominant-baseline', 'central');
-    flag.setAttribute('font-size', c.wildcard ? '34' : '34');
-    flag.textContent = c.flag;
-    if (c.wildcard) flag.setAttribute('class', 'wild-flag');
-    wheelSvg.appendChild(flag);
+    // Flag image (real SVG flag — Windows has no flag-emoji glyphs)
+    const flagPos = polar(CX, CY, R * 0.52, mid);
+    const fw = 54, fh = 36;
+    const clip = document.createElementNS(SVG_NS, 'clipPath');
+    clip.setAttribute('id', `flagclip-${i}`);
+    const clipRect = document.createElementNS(SVG_NS, 'rect');
+    clipRect.setAttribute('x', flagPos.x - fw / 2); clipRect.setAttribute('y', flagPos.y - fh / 2);
+    clipRect.setAttribute('width', fw); clipRect.setAttribute('height', fh);
+    clipRect.setAttribute('rx', 5);
+    clip.appendChild(clipRect);
+    defs.appendChild(clip);
+
+    const img = document.createElementNS(SVG_NS, 'image');
+    img.setAttribute('x', flagPos.x - fw / 2); img.setAttribute('y', flagPos.y - fh / 2);
+    img.setAttribute('width', fw); img.setAttribute('height', fh);
+    img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+    img.setAttribute('clip-path', `url(#flagclip-${i})`);
+    img.setAttribute('href', flagSrc(c));
+    img.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', flagSrc(c));
+    img.style.pointerEvents = 'none';
+    wheelSvg.appendChild(img);
+
+    const frame = document.createElementNS(SVG_NS, 'rect');
+    frame.setAttribute('x', flagPos.x - fw / 2); frame.setAttribute('y', flagPos.y - fh / 2);
+    frame.setAttribute('width', fw); frame.setAttribute('height', fh);
+    frame.setAttribute('rx', 5);
+    frame.setAttribute('fill', 'none');
+    frame.setAttribute('stroke', '#ffffff');
+    frame.setAttribute('stroke-width', '2');
+    frame.style.pointerEvents = 'none';
+    wheelSvg.appendChild(frame);
 
     // Name along arc
     const nameText = document.createElementNS(SVG_NS, 'text');
-    nameText.setAttribute('font-size', c.wildcard ? '16' : '20');
+    nameText.setAttribute('font-size', '20');
     nameText.setAttribute('font-weight', '700');
-    nameText.setAttribute('fill', c.wildcard ? '#3a2400' : '#ffffff');
-    nameText.setAttribute('stroke', c.wildcard ? '#fff3b0' : '#000');
+    nameText.setAttribute('fill', '#ffffff');
+    nameText.setAttribute('stroke', '#000');
     nameText.setAttribute('stroke-width', '0.8');
     nameText.setAttribute('paint-order', 'stroke');
     nameText.setAttribute('letter-spacing', '1');
@@ -420,7 +436,7 @@ function rgbToHex(r, g, b) {
 let currentRotation = 0;
 let isSpinning = false;
 let lastCountryIndex = -1;
-let lastResult = null;        // { country, dish, wildcard }
+let lastResult = null;        // { country }
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function spin() {
@@ -430,14 +446,9 @@ function spin() {
   playClick();
 
   let targetIndex;
-  // ~10% jackpot
-  if (Math.random() < 0.10) {
-    targetIndex = WILDCARD_INDEX;
-  } else {
-    do {
-      targetIndex = Math.floor(Math.random() * countries.length);
-    } while (countries.length > 1 && targetIndex === lastCountryIndex);
-  }
+  do {
+    targetIndex = Math.floor(Math.random() * countries.length);
+  } while (countries.length > 1 && targetIndex === lastCountryIndex);
   spinToIndex(targetIndex);
 }
 
@@ -467,13 +478,8 @@ function spinToIndex(targetIndex) {
   setTimeout(() => {
     stopDrumroll();
     clearFocus();
-    const seg = segments[targetIndex];
-    if (seg.wildcard) {
-      revealWildcard();
-    } else {
-      lastCountryIndex = targetIndex;
-      revealCountry(countries[targetIndex]);
-    }
+    lastCountryIndex = targetIndex;
+    revealCountry(countries[targetIndex]);
     isSpinning = false;
     spinBtn.disabled = false;
   }, SPIN_MS);
@@ -522,104 +528,32 @@ function stopDrumroll() {
 let savedScrollY = 0;
 
 function revealCountry(country) {
-  const dish = country.dishList[Math.floor(Math.random() * country.dishList.length)];
-  lastResult = { country, dish, wildcard: false };
-  openResultModal(country, dish, false);
+  lastResult = { country };
+  openResultModal(country);
   launchRain(country.foodEmojis);
   shakeScreen();
   flameBurst();
-  playWin(false);
+  playWin();
   buzz([0, 40, 60, 120]);
-  recordSpin(country, dish, false);
+  recordSpin(country);
 }
 
-function revealWildcard() {
-  const src = countries[Math.floor(Math.random() * countries.length)];
-  const dish = src.dishList[Math.floor(Math.random() * src.dishList.length)];
-  lastResult = { country: src, dish, wildcard: true };
-  openResultModal(src, dish, true);
-  launchRain(['🌟', '💰', '👨‍🍳', '⭐', ...src.foodEmojis], true);
-  shakeScreen();
-  flameBurst(true);
-  playWin(true);
-  buzz([0, 50, 40, 50, 40, 120]);
-  recordSpin(src, dish, true);
-}
-
-function openResultModal(country, dish, wildcard) {
-  document.getElementById('modalFlag').textContent = wildcard ? '🌟' : country.flag;
-  document.getElementById('modalCountry').textContent = wildcard ? country.name : country.name;
+function openResultModal(country) {
+  const flagEl = document.getElementById('modalFlag');
+  flagEl.innerHTML = `<img class="flag-img" src="${flagSrc(country)}" alt="${country.name}-flagg">`;
+  document.getElementById('modalCountry').textContent = country.name;
   document.getElementById('modalTagline').textContent = country.tagline;
   document.getElementById('modalDishes').textContent = country.dishes;
   document.getElementById('modalInfo').textContent = country.info;
   document.getElementById('modalMeme').textContent = country.meme;
 
-  // Wildcard banner
-  const wildBanner = document.getElementById('wildcardBanner');
-  if (wildBanner) wildBanner.style.display = wildcard ? 'block' : 'none';
-  const banner = document.querySelector('.modal-banner');
-  if (banner) banner.textContent = wildcard ? '🌟 CHEF\'S WILDCARD 🌟' : '★ CHEF\'S CHOICE ★';
-
-  // Origin line for wildcard
-  const origin = document.getElementById('wildOrigin');
-  if (origin) {
-    origin.style.display = wildcard ? 'block' : 'none';
-    origin.textContent = `Tilfeldig trukket fra ${country.flag} ${country.name}`;
-  }
-
   renderMeters(country);
-
-  modal.classList.toggle('wild', wildcard);
 
   savedScrollY = window.scrollY;
   document.body.style.top = `-${savedScrollY}px`;
   document.body.classList.add('modal-open');
   modal.classList.add('active');
   modal.setAttribute('aria-hidden', 'false');
-
-  animateSlot(country, dish, wildcard);
-}
-
-// Slot machine cycling through dishes, landing on the chosen one.
-function animateSlot(country, finalDish, wildcard) {
-  const slotEmoji = document.getElementById('slotEmoji');
-  const slotName  = document.getElementById('slotName');
-  if (!slotEmoji || !slotName) return;
-
-  const pool = wildcard
-    ? countries.flatMap(c => c.dishList)
-    : country.dishList;
-
-  if (reduceMotion) {
-    slotEmoji.textContent = finalDish.emoji;
-    slotName.textContent = finalDish.navn;
-    document.getElementById('dishSlot')?.classList.add('locked');
-    return;
-  }
-
-  const slot = document.getElementById('dishSlot');
-  slot?.classList.remove('locked');
-
-  let t = 0, interval = 60, elapsed = 0;
-  const total = 1300;
-  function step() {
-    const d = pool[Math.floor(Math.random() * pool.length)];
-    slotEmoji.textContent = d.emoji;
-    slotName.textContent = d.navn;
-    playTick();
-    elapsed += interval;
-    interval *= 1.12;
-    if (elapsed < total) {
-      setTimeout(step, interval);
-    } else {
-      slotEmoji.textContent = finalDish.emoji;
-      slotName.textContent = finalDish.navn;
-      slot?.classList.add('locked');
-      tone(880, 0.18, 'triangle', 0.2);
-      buzz(40);
-    }
-  }
-  step();
 }
 
 function renderMeters(country) {
@@ -651,7 +585,7 @@ function hideModal() {
 /* ============================================================
    FX — rain, shake, flames
    ============================================================ */
-function launchRain(emojis, jackpot = false) {
+function launchRain(emojis) {
   const colors = ['#dc143c', '#ffd700', '#ff5722', '#ffffff', '#ff9800', '#ff1744'];
   const isMobile = window.innerWidth < 600;
   const total = (reduceMotion ? 14 : (isMobile ? 46 : 90));
@@ -664,9 +598,7 @@ function launchRain(emojis, jackpot = false) {
       c.style.fontSize = (18 + Math.random() * 22) + 'px';
     } else {
       c.className = 'confetti';
-      c.style.background = jackpot
-        ? (Math.random() > 0.5 ? '#ffd700' : '#fff3b0')
-        : colors[Math.floor(Math.random() * colors.length)];
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
       c.style.width = (6 + Math.random() * 10) + 'px';
       c.style.height = (14 + Math.random() * 14) + 'px';
       c.style.borderRadius = Math.random() > 0.7 ? '50%' : '2px';
@@ -688,12 +620,12 @@ function shakeScreen() {
   setTimeout(() => document.body.classList.remove('shake'), 700);
 }
 
-function flameBurst(jackpot = false) {
+function flameBurst() {
   if (reduceMotion || !wheelShell) return;
   const rect = wheelShell.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  const icons = jackpot ? ['🔥', '🌟', '✨', '💥'] : ['🔥', '✨', '🔥', '💥'];
+  const icons = ['🔥', '✨', '🔥', '💥'];
   const count = window.innerWidth < 600 ? 14 : 22;
   for (let i = 0; i < count; i++) {
     const f = document.createElement('div');
@@ -727,18 +659,16 @@ function saveHistory(h) {
 }
 let history = loadHistory();
 
-function recordSpin(country, dish, wildcard) {
+function recordSpin(country) {
   history.total += 1;
-  if (!wildcard) {
-    history.visited[country.name] = (history.visited[country.name] || 0) + 1;
-    if (history.streakName === country.name) history.streakCount += 1;
-    else { history.streakName = country.name; history.streakCount = 1; }
-  }
-  history.menu.unshift({ flag: country.flag, emoji: dish.emoji, navn: dish.navn, country: country.name, wildcard });
+  history.visited[country.name] = (history.visited[country.name] || 0) + 1;
+  if (history.streakName === country.name) history.streakCount += 1;
+  else { history.streakName = country.name; history.streakCount = 1; }
+  history.menu.unshift({ code: FLAG_CODES[country.name], country: country.name, tagline: country.tagline });
   history.menu = history.menu.slice(0, 8);
   saveHistory(history);
   renderPassport();
-  checkAchievements(country, wildcard);
+  checkAchievements(country);
 }
 
 function renderPassport() {
@@ -755,7 +685,7 @@ function renderPassport() {
     stamps.innerHTML = countries.map(c => {
       const n = history.visited[c.name] || 0;
       return `<div class="stamp ${n ? 'on' : ''}" title="${c.name}: ${n}">
-        <span class="stamp-flag">${c.flag}</span>
+        <img class="stamp-flag" src="${flagSrc(c)}" alt="${c.name}-flagg">
         ${n ? `<span class="stamp-count">${n}</span>` : ''}
       </div>`;
     }).join('');
@@ -764,10 +694,10 @@ function renderPassport() {
   const menuEl = document.getElementById('menuList');
   if (menuEl) {
     if (!history.menu.length) {
-      menuEl.innerHTML = '<li class="menu-empty">Ingen middager enda. Snurr hjulet!</li>';
+      menuEl.innerHTML = '<li class="menu-empty">Ingen land enda. Snurr hjulet!</li>';
     } else {
       menuEl.innerHTML = history.menu.map(m =>
-        `<li>${m.wildcard ? '🌟 ' : ''}${m.emoji} <strong>${m.navn}</strong> <span>· ${m.flag} ${m.country}</span></li>`
+        `<li><img class="menu-flag" src="flags/${m.code}.svg" alt=""> <strong>${m.country}</strong> <span>· ${m.tagline}</span></li>`
       ).join('');
     }
   }
@@ -781,13 +711,12 @@ const ACHIEVEMENTS = [
   { id: 'five',     test: () => Object.keys(history.visited).length >= 5, text: '🌍 5 land besøkt — du er en globetrotter!' },
   { id: 'all',      test: () => Object.keys(history.visited).length >= countries.length, text: '👑 ALLE land besøkt! Gordon nikker (knapt).' },
   { id: 'streak3',  test: () => history.streakCount >= 3,                 text: '🔁 Triple på rad! Skjebnen elsker deg.' },
-  { id: 'ten',      test: () => history.total >= 10,                      text: '🔥 10 spinn! Kjøkkenet er ditt nå.' },
-  { id: 'wildcard', test: (_, wild) => wild,                              text: '🌟 WILDCARD! Sjeldnere enn en velstekt biff hos Gordon.' }
+  { id: 'ten',      test: () => history.total >= 10,                      text: '🔥 10 spinn! Kjøkkenet er ditt nå.' }
 ];
-function checkAchievements(country, wildcard) {
+function checkAchievements(country) {
   ACHIEVEMENTS.forEach(a => {
     if (history.achievements.includes(a.id)) return;
-    if (a.test(country, wildcard)) {
+    if (a.test(country)) {
       history.achievements.push(a.id);
       saveHistory(history);
       showToast(a.text);
@@ -822,10 +751,8 @@ function nextToast() {
 async function shareResult() {
   playClick();
   if (!lastResult) return;
-  const { country, dish, wildcard } = lastResult;
-  const text = wildcard
-    ? `🌟 WILDCARD! I kveld lager jeg ${dish.emoji} ${dish.navn} (${country.flag} ${country.name}). Gordon godkjenner. 6 ⭐`
-    : `I kveld lager jeg ${dish.emoji} ${dish.navn} fra ${country.flag} ${country.name}. Gordon godkjenner. 6 ⭐ — Spin The Wheel: 6 Stjernes Middag`;
+  const { country } = lastResult;
+  const text = `${country.flag} I kveld blir det ${country.name}! Gordon godkjenner. 6 ⭐ — Spin The Wheel: 6 Stjernes Middag`;
   try {
     if (navigator.share) {
       await navigator.share({ title: '6 Stjernes Middag', text });
